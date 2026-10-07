@@ -78,16 +78,28 @@ display(
         y: "term",
         sort: { y: "-x" },
         fill: "#d97706",
-        tip: true,
+        tip: {
+            format: {
+                x: false,
+                y: false,
+            },
+            channels: {
+                Keyword: "term",
+                Reports: "count",
+            },
+        },
       }),
       Plot.ruleX([0]),
     ],
   }),
 );
 ```
+
 ## Petroleum-related Reports Over Time
 
-To examine how petroleum-related odor reports changed over time, I grouped the reports by month using the **`datetime`** field and counted the number of reports classified as petroleum-related in each month. The resulting time series shows periods when petroleum-related reports were more or less frequent, making it possible to identify broader temporal patterns in the dataset.
+To examine how petroleum-related odor reports changed over time, I grouped the reports by month using the **`datetime`** field and counted the number of reports classified as petroleum-related in each month. The resulting time series shows periods when petroleum-related reports were more or less frequent. 
+
+Total reports, and those charted here capturing petroleum-related keywords peaked between 2020-2021. We can infer that more people were using the app to report unpleasant odors during the COVID-19 pandemic.
 
 ```js
 Plot.plot({
@@ -143,7 +155,18 @@ Plot.plot({
         x: "percentage",
         y: "direction",
         sort: {y: "-x"},
-        fill: "#d97706"
+        fill: "#d97706",
+        tip: {
+            format: {
+                x: false,
+                y: false,
+            },
+            channels: {
+                "Wind direction": "direction",
+                "Reports": "count",
+                "Share": "percentage",
+            },
+        },
       }
     ),
     Plot.ruleX([0])
@@ -153,18 +176,20 @@ Plot.plot({
 
 ```js
 const petroleumByWindDirection = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
-  .map(direction => {
+  .map((direction) => {
     const petroleumReports = dataWithPetroleum.filter(
-      d => d.petroleumRelated
+      (d) => d.petroleumRelated,
     );
 
     const directionReports = petroleumReports.filter(
-      d => d.compass === direction
+      (d) => d.compass === direction,
     );
 
     return {
       direction,
-      percentage: (directionReports.length / petroleumReports.length) * 100
+      count: directionReports.length,
+      percentage:
+        (directionReports.length / petroleumReports.length) * 100,
     };
-  })
+  });
 ```

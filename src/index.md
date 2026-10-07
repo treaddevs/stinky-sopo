@@ -556,7 +556,7 @@ display(
   }),
 );
 ```
-*(Click a point to see what was reported)*
+*(Click a point to see what was reported at that location)*
 
 ### Petroleum-related reports extend beyond the waterfront
 
