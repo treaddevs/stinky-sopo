@@ -11,75 +11,136 @@ community-level signal that fixed air monitors cannot capture on their own.
 ## More than half of the reports contain petroleum-related language
 
 ```js
-const petroleumCount = dataWithPetroleum.filter(
+const [rangeStart, rangeEnd] = startEnd;
+
+const reportsInRange = dataWithPetroleum.filter(
+  (d) => rangeStart <= d.datetime && d.datetime < rangeEnd,
+);
+
+const petroleumCount = reportsInRange.filter(
   (d) => d.petroleumRelated,
 ).length;
 
-const otherCount = dataWithPetroleum.filter(
-  (d) => !d.petroleumRelated,
-).length;
-
-const totalReports = dataWithPetroleum.length;
+const otherCount = reportsInRange.length - petroleumCount;
+const totalReports = reportsInRange.length;
 
 const reportCategoryCounts = [
   {
     category: "Petroleum-related",
     count: petroleumCount,
-    percentage: petroleumCount / totalReports,
+    percentage: totalReports ? petroleumCount / totalReports : 0,
     label: `${petroleumCount} (${d3.format(".0%")(
-      petroleumCount / totalReports,
+      totalReports ? petroleumCount / totalReports : 0,
     )})`,
   },
   {
     category: "Other",
     count: otherCount,
-    percentage: otherCount / totalReports,
+    percentage: totalReports ? otherCount / totalReports : 0,
     label: `${otherCount} (${d3.format(".0%")(
-      otherCount / totalReports,
+      totalReports ? otherCount / totalReports : 0,
     )})`,
   },
 ];
 
 display(
+  html`
+    <div style="margin-bottom: 8px; font-size: 14px;">
+      <strong>Selected range:</strong>
+      ${formatMapDateRange(startEnd)}
+      <span style="color: #888;"> · ${d3.format(",")(totalReports)} reports</span>
+    </div>
+    ${Plot.plot({
+      height: 350,
+      y: {
+        grid: true,
+        label: "Number of reports",
+        inset: 10,
+        domain: [0, Math.max(1, d3.max(reportCategoryCounts, (d) => d.count) * 1.12)],
+      },
+      x: {
+        label: null,
+        domain: ["Petroleum-related", "Other"],
+      },
+      color: {
+        domain: ["Petroleum-related", "Other"],
+        range: ["#d97706", "#888888"],
+      },
+      marks: [
+        Plot.barY(reportCategoryCounts, {
+          x: "category",
+          y: "count",
+          fill: "category",
+        }),
+        Plot.text(reportCategoryCounts, {
+          x: "category",
+          y: "count",
+          text: "label",
+          dy: -10,
+          fontWeight: "bold",
+        }),
+      ],
+    })}
+  `,
+);
+```
+
+```js
+display(
   Plot.plot({
-    height: 450,
+    height: 180,
     y: {
       grid: true,
-      label: "Number of reports",
-      inset: 10,
-      domain: [0, d3.max(reportCategoryCounts, d => d.count) * 1.12],
+      label: "Monthly reports",
+      zero: true,
     },
     x: {
-      label: null,
-      domain: ["Petroleum-related", "Other"],
-    },
-    color: {
-      domain: ["Petroleum-related", "Other"],
-      range: ["#d97706", "#888888"],
+      type: "utc",
+      label: "Drag the selection to choose a date range",
     },
     marks: [
-      Plot.barY(reportCategoryCounts, {
-        x: "category",
+      Plot.areaY(mapTimeline, {
+        x: "month",
         y: "count",
-        fill: "category",
+        fill: "#d97706",
+        fillOpacity: 0.18,
       }),
+      Plot.lineY(mapTimeline, {
+        x: "month",
+        y: "count",
+        stroke: "#d97706",
+      }),
+      (index, scales, channels, dimensions) => {
+        const x1 = dimensions.marginLeft;
+        const x2 = dimensions.width - dimensions.marginRight;
+        const y1 = dimensions.marginTop;
+        const y2 = dimensions.height - dimensions.marginBottom;
 
-      Plot.text(reportCategoryCounts, {
-        x: "category",
-        y: "count",
-        text: "label",
-        dy: -10,
-        fontWeight: "bold",
-      }),
+        const brush = d3
+          .brushX()
+          .extent([[x1, y1], [x2, y2]])
+          .on("brush end", (event) => {
+            if (!event.sourceEvent || !event.selection) return;
+
+            const range = event.selection.map(scales.x.invert);
+            setStartEnd(range);
+          });
+
+        const g = d3.create("svg:g").call(brush);
+
+        // Start at the earliest month in the dataset.
+        g.call(brush.move, defaultStartEnd.map(scales.x));
+
+        return g.node();
+      },
     ],
   }),
 );
 ```
 
-56% of the reports contain at least one petroleum-related keyword.
+As of August 2026, the majority of Smell MyCity reports in the Portland, Maine area contain at least one petroleum-related keyword which includes: ***oil, petrol, petro, tar, petroleum, gasoline, fuel, diesel, asphalt, oily, petrochemical, crude, asphalty***
 
-This does not mean that 56% of the air contains petroleum. It means that
-petroleum-related language appears in 56% of the submitted reports.
+Petroleum-related language appears in 56% of the submitted reports.
 
 ## Exploring odor reports trends from Smell MyCity data
 
@@ -129,14 +190,19 @@ const reportType = view(
 ```
 
 ```js
-const filteredReports =
-  reportType === "All reports"
-    ? dataWithPetroleum
-    : dataWithPetroleum.filter((d) =>
-        reportType === "Petroleum-related"
-          ? d.petroleumRelated
-          : !d.petroleumRelated,
-      );
+const filteredReports = dataWithPetroleum.filter((d) => {
+  const inDateRange =
+    startEnd[0] <= d.datetime &&
+    d.datetime < startEnd[1];
+
+  const matchesType =
+    reportType === "All reports" ||
+    (reportType === "Petroleum-related"
+      ? d.petroleumRelated
+      : !d.petroleumRelated);
+
+  return inDateRange && matchesType;
+});
 ```
 
 ```js
@@ -144,40 +210,59 @@ function basemapUrl(z, x, y) {
   return `https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/${z}/${y}/${x}`;
 }
 
+function renderBasemap(
+  projection,
+  width,
+  height,
+  zoomTransform = d3.zoomIdentity,
+) {
+  const effectiveScale =
+    projection.scale() * 2 * Math.PI * zoomTransform.k;
+
+  const effectiveTranslate = zoomTransform.apply(
+    projection([0, 0]),
+  );
+
+  const tiles = tile()
+    .extent([
+      [0, 0],
+      [width, height],
+    ])
+    .scale(effectiveScale)
+    .translate(effectiveTranslate)();
+
+  const [tx, ty] = tiles.translate;
+  const k = tiles.scale;
+
+  const clipId = `basemap-${Math.random()
+    .toString(36)
+    .slice(2)}`;
+
+  const g = d3
+    .create("svg:g")
+    .attr("class", "basemap-layer")
+    .attr("clip-path", `url(#${clipId})`);
+
+  g.append("clipPath")
+    .attr("id", clipId)
+    .append("rect")
+    .attr("width", width)
+    .attr("height", height);
+
+  g.selectAll("image")
+    .data(tiles)
+    .join("image")
+    .attr("href", ([x, y, z]) => basemapUrl(z, x, y))
+    .attr("x", ([x]) => Math.round((x + tx) * k))
+    .attr("y", ([, y]) => Math.round((y + ty) * k))
+    .attr("width", k)
+    .attr("height", k);
+
+  return g.node();
+}
+
 function basemap(projection, width, height) {
-  return () => {
-    const tiles = tile()
-      .extent([
-        [0, 0],
-        [width, height],
-      ])
-      .scale(projection.scale() * 2 * Math.PI)
-      .translate(projection([0, 0]))();
-
-    const [tx, ty] = tiles.translate;
-    const k = tiles.scale;
-
-    const clipId = `basemap-${Math.random().toString(36).slice(2)}`;
-
-    const g = d3.create("svg:g").attr("clip-path", `url(#${clipId})`);
-
-    g.append("clipPath")
-      .attr("id", clipId)
-      .append("rect")
-      .attr("width", width)
-      .attr("height", height);
-
-    g.selectAll("image")
-      .data(tiles)
-      .join("image")
-      .attr("href", ([x, y, z]) => basemapUrl(z, x, y))
-      .attr("x", ([x]) => Math.round((x + tx) * k))
-      .attr("y", ([, y]) => Math.round((y + ty) * k))
-      .attr("width", k)
-      .attr("height", k);
-
-    return g.node();
-  };
+  return () => renderBasemap(projection, width, height);
 }
 ```
 
@@ -241,7 +326,11 @@ display(
 
     const svg = d3.select(plot);
 
-    const mapGroups = svg.selectAll(":scope > g");
+    const mapGroups = svg
+      .selectAll(":scope > g")
+      .filter(function () {
+        return !d3.select(this).classed("basemap-layer");
+      });
 
     const zoom = d3
       .zoom()
@@ -250,16 +339,33 @@ display(
         [0, 0],
         [width, height],
       ])
-      .translateExtent([
-        [0, 0],
-        [width, height],
-      ])
       .on("zoom", (event) => {
-        mapGroups.attr("transform", event.transform);
+        const transform = event.transform;
+
+        const oldBasemap = svg.select(".basemap-layer").node();
+
+        if (oldBasemap) {
+          const newBasemap = renderBasemap(
+            projection,
+            width,
+            height,
+            transform,
+          );
+
+          oldBasemap.replaceWith(newBasemap);
+        }
+
+        mapGroups.attr("transform", transform);
+
+        mapGroups
+          .selectAll("circle")
+          .attr("r", 6 / transform.k)
+          .attr("stroke-width", 1 / transform.k);
       });
 
     svg.call(zoom);
-
+    svg.call(zoom.scaleBy, 2);
+    
     // -------------------------
     // Zoom controls
     // -------------------------
@@ -557,6 +663,137 @@ display(
 );
 ```
 *(Click a point to see what was reported at that location)*
+
+```js
+display(html`
+  <div style="margin: 12px 0; font-size: 14px;">
+    <strong>Selected range:</strong>
+    ${formatMapDateRange(startEnd)}
+  </div>
+`);
+```
+
+```js
+function formatMapDateRange([start, end]) {
+  const format = d3.timeFormat("%b %Y");
+
+  // The end date is exclusive, so show the previous month.
+  const lastIncludedMonth = d3.timeMonth.offset(
+    d3.timeMonth.floor(end),
+    -1
+  );
+
+  return `${format(start)} – ${format(lastIncludedMonth)}`;
+}
+```
+
+```js
+const mapTimelineCounts = d3.rollup(
+  dataWithPetroleum,
+  (rows) => rows.length,
+  (d) => +d3.timeMonth.floor(d.datetime)
+);
+
+const mapTimelineFirstMonth = d3.timeMonth.floor(
+  d3.min(dataWithPetroleum, (d) => d.datetime)
+);
+
+const mapTimelineLastMonth = d3.timeMonth.floor(
+  d3.max(dataWithPetroleum, (d) => d.datetime)
+);
+
+const mapTimeline = d3.timeMonth
+  .range(
+    mapTimelineFirstMonth,
+    d3.timeMonth.offset(mapTimelineLastMonth, 1)
+  )
+  .map((month) => ({
+    month,
+    count: mapTimelineCounts.get(+month) ?? 0
+  }));
+
+// -------------------------
+// Shared date-range state
+// -------------------------
+
+const defaultStartEnd = [
+  mapTimelineFirstMonth,
+  d3.timeMonth.offset(mapTimelineFirstMonth, 12)
+];
+
+const startEnd = Mutable(defaultStartEnd);
+
+const setStartEnd = (range) => {
+  startEnd.value = range ?? defaultStartEnd;
+};
+
+const getStartEnd = () => startEnd.value;
+
+// -------------------------
+// Interactive timeline brush
+// -------------------------
+
+display(
+  Plot.plot({
+    height: 180,
+
+    y: {
+      grid: true,
+      label: "Number of reports",
+      zero: true
+    },
+
+    x: {
+      label: "Drag the selection to choose a date range"
+    },
+
+    marks: [
+      Plot.areaY(mapTimeline, {
+        x: "month",
+        y: "count",
+        fill: "#d97706",
+        fillOpacity: 0.18
+      }),
+
+      Plot.lineY(mapTimeline, {
+        x: "month",
+        y: "count",
+        stroke: "#d97706"
+      }),
+
+      (index, scales, channels, dimensions, context) => {
+        const x1 = dimensions.marginLeft;
+        const x2 = dimensions.width - dimensions.marginRight;
+        const y1 = dimensions.marginTop;
+        const y2 = dimensions.height - dimensions.marginBottom;
+
+        const brushed = (event) => {
+          if (!event.sourceEvent || !event.selection) return;
+
+          setStartEnd(
+            event.selection.map(scales.x.invert)
+          );
+        };
+
+        const brush = d3
+          .brushX()
+          .extent([[x1, y1], [x2, y2]])
+          .on("brush end", brushed);
+
+        const g = d3.create("svg:g").call(brush);
+
+        // Initialize the selection at the beginning of the timeline
+        g.call(
+          brush.move,
+          defaultStartEnd.map(scales.x)
+        );
+
+        return g.node();
+      }
+    ]
+  })
+);
+```
 
 ### Petroleum-related reports extend beyond the waterfront
 

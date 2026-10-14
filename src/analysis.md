@@ -46,31 +46,42 @@ const dataWithPetroleum = data.map((d) => {
 });
 ```
 
-## Most Common Petroleum-Related Keywords
-
 ```js
 const petroleumKeywordCounts = petroleumKeywords
   .map((keyword) => ({
     term: keyword,
     count: dataWithPetroleum.reduce((total, d) => {
-      const text = `${d.description ?? ""} ${d.comments ?? ""}`.toLowerCase();
+      const inRange =
+        startEnd[0] <= d.datetime &&
+        d.datetime < startEnd[1];
+
+      if (!inRange) return total;
+
+      const text =
+        `${d.description ?? ""} ${d.comments ?? ""}`
+          .toLowerCase();
 
       return total + (text.includes(keyword) ? 1 : 0);
     }, 0),
   }))
   .sort((a, b) => b.count - a.count);
 
-display(
-  Plot.plot({
+  display(html`
+  <h2>Most Common Petroleum-Related Keywords</h2>
+  <p>
+    Reports from ${formatDateRange(startEnd)}
+  </p>
+  ${Plot.plot({
     height: 500,
     marginLeft: 110,
     x: {
       grid: true,
       label: "Number of reports mentioning keyword",
+      zero: true
     },
     y: {
       label: null,
-      domain: petroleumKeywordCounts.map((d) => d.term),
+      domain: petroleumKeywordCounts.map((d) => d.term)
     },
     marks: [
       Plot.barX(petroleumKeywordCounts, {
@@ -79,29 +90,277 @@ display(
         sort: { y: "-x" },
         fill: "#d97706",
         tip: {
-            format: {
-                x: false,
-                y: false,
-            },
-            channels: {
-                Keyword: "term",
-                Reports: "count",
-            },
-        },
+          format: { x: false, y: false },
+          channels: {
+            Keyword: "term",
+            Reports: "count"
+          }
+        }
       }),
-      Plot.ruleX([0]),
-    ],
-  }),
+      Plot.ruleX([0])
+    ]
+  })}
+`);
+```
+
+```js
+const monthlyPetroleumCounts = d3.rollup(
+  dataWithPetroleum.filter((d) => d.petroleumRelated),
+  (rows) => rows.length,
+  (d) => +d3.timeMonth.floor(d.datetime)
+);
+
+const firstMonth1 = d3.timeMonth.floor(
+  d3.min(dataWithPetroleum, (d) => d.datetime)
+);
+
+const lastMonth1 = d3.timeMonth.floor(
+  d3.max(dataWithPetroleum, (d) => d.datetime)
+);
+
+const petroleumTimeline = d3.timeMonth
+  .range(firstMonth1, d3.timeMonth.offset(lastMonth1, 1))
+  .map((month) => ({
+    month,
+    count: monthlyPetroleumCounts.get(+month) ?? 0
+  }));
+
+  display(
+  Plot.plot({
+    height: 180,
+    y: {
+      grid: true,
+      label: "Petroleum-related reports",
+      zero: true
+    },
+    x: {
+      label: "Select a date range →"
+    },
+    marks: [
+      Plot.lineY(petroleumTimeline, {
+        x: "month",
+        y: "count",
+        stroke: "#d97706"
+      }),
+
+      (index, scales, channels, dimensions, context) => {
+        const x1 = dimensions.marginLeft;
+        const y1 = dimensions.marginTop;
+        const x2 = dimensions.width - dimensions.marginRight;
+        const y2 = dimensions.height - dimensions.marginBottom;
+
+        const brushed = (event) => {
+          if (!event.sourceEvent) return;
+
+          let { selection } = event;
+
+          if (!selection) return;
+
+          const dates = selection.map(scales.x.invert);
+          setStartEnd(dates);
+        };
+
+        const brush = d3
+          .brushX()
+          .extent([[x1, y1], [x2, y2]])
+          .on("brush end", brushed);
+
+        const g = d3.create("svg:g").call(brush);
+
+        const windowSize = 12; // months
+        const start = petroleumTimeline[0].month;
+        const end = d3.timeMonth.offset(start, windowSize);
+
+        g.call(brush.move, [start, end].map(scales.x));
+
+        return g.node();
+      }
+    ]
+  })
 );
 ```
 
 ## Petroleum-related Reports Over Time
 
-To examine how petroleum-related odor reports changed over time, I grouped the reports by month using the **`datetime`** field and counted the number of reports classified as petroleum-related in each month. The resulting time series shows periods when petroleum-related reports were more or less frequent. 
+To examine how odor reports changed over time, I plotted reports by month using the **`datetime`** field counting the number of reports containing petroleum-related keywords for each month. I also counted reports that did not contain petroleum language which I plotted alongside the petroleum-related reports.
 
-Total reports, and those charted here capturing petroleum-related keywords peaked between 2020-2021. We can infer that more people were using the app to report unpleasant odors during the COVID-19 pandemic.
+Reports peaked between 2020 and 2021 and in **April 2021**, there were approximately **139% more petroleum-related reports** than other reports.
 
 ```js
+function formatDateRange([start, end]) {
+  const format = d3.utcFormat("%b %Y");
+
+  // The brush's end date is exclusive, so display the
+  // last month included in the selected range.
+  const lastIncluded = d3.utcMonth.offset(end, -1);
+
+  return `${format(start)} – ${format(lastIncluded)}`;
+}
+```
+
+```js
+const categories = ["Petroleum-related", "Other reports"];
+
+const classifiedReports = dataWithPetroleum.map((d) => ({
+  ...d,
+  category: d.petroleumRelated
+    ? "Petroleum-related"
+    : "Other reports"
+}));
+
+const monthlyCounts = d3.rollup(
+  classifiedReports,
+  (rows) => rows.length,
+  (d) => d.category,
+  (d) => +d3.timeMonth.floor(d.datetime)
+);
+
+const firstMonth2 = d3.timeMonth.floor(
+  d3.min(classifiedReports, (d) => d.datetime)
+);
+
+const lastMonth2 = d3.timeMonth.floor(
+  d3.max(classifiedReports, (d) => d.datetime)
+);
+
+const monthlyReports = d3.timeMonth
+  .range(firstMonth2, d3.timeMonth.offset(lastMonth2, 1))
+  .flatMap((month) =>
+    categories.map((category) => ({
+      month,
+      category,
+      count:
+        monthlyCounts.get(category)?.get(+month) ?? 0
+    }))
+  );
+```
+
+```js
+const defaultStartEnd = [
+  d3.timeMonth.offset(lastMonth2, -11),
+  d3.timeMonth.offset(lastMonth2, 1)
+];
+
+const startEnd = Mutable(defaultStartEnd);
+
+const setStartEnd = (range) => {
+  startEnd.value = range ?? defaultStartEnd;
+};
+
+const getStartEnd = () => startEnd.value;
+```
+
+```js
+display(html`
+  <h2>Monthly odor reports: ${formatDateRange(startEnd)}</h2>
+  ${Plot.plot({
+    y: {
+      grid: true,
+      label: "Monthly reports",
+      zero: true
+    },
+    x: {
+      label: "Month"
+    },
+    color: {
+      domain: categories,
+      range: ["#d97706", "#888888"],
+      legend: true
+    },
+    marks: [
+      Plot.lineY(
+        monthlyReports.filter(
+          (d) =>
+            startEnd[0] <= d.month &&
+            d.month < startEnd[1]
+        ),
+        {
+          x: "month",
+          y: "count",
+          stroke: "category",
+          tip: true
+        }
+      )
+    ]
+  })}
+`);
+```
+
+```js
+display(html`
+  <h2>Monthly odor reports: May 2019 - Aug 2026</h2>
+  ${Plot.plot({
+    y: {
+      grid: true,
+      label: "Monthly reports",
+      zero: true
+    },
+    x: {
+      label: "Month"
+    },
+    color: {
+      domain: categories,
+      range: ["#d97706", "#888888"],
+      legend: true
+    },
+    marks: [
+      Plot.lineY(monthlyReports, {
+        x: "month",
+        y: "count",
+        stroke: "category",
+        tip: true
+      }),
+
+      (index, scales, channels, dimensions, context) => {
+        const x1 = dimensions.marginLeft;
+        const y1 = 0;
+        const x2 = dimensions.width - dimensions.marginRight;
+        const y2 = dimensions.height - dimensions.marginBottom;
+
+        const brushed = (event) => {
+          if (!event.sourceEvent) return;
+
+          let { selection } = event;
+
+          if (!selection) {
+            const r = 10;
+            let [px] = d3.pointer(
+              event,
+              context.ownerSVGElement
+            );
+
+            px = Math.max(
+              x1 + r,
+              Math.min(x2 - r, px)
+            );
+
+            selection = [px - r, px + r];
+            g.call(brush.move, selection);
+          }
+
+          setStartEnd(selection.map(scales.x.invert));
+        };
+
+        const brush = d3
+          .brushX()
+          .extent([[x1, y1], [x2, y2]])
+          .on("brush end", brushed);
+
+        const g = d3.create("svg:g").call(brush);
+
+        g.call(
+          brush.move,
+          getStartEnd().map(scales.x)
+        );
+
+        return g.node();
+      }
+    ]
+  })}
+`);
+```
+
+<!-- ```js
 Plot.plot({
   y: {
     grid: true,
@@ -123,7 +382,7 @@ Plot.plot({
     )
   ]
 })
-```
+``` -->
 
 ## Petroleum-related Reports by Wind Direction
 
