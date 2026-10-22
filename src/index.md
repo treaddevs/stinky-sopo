@@ -17,9 +17,7 @@ const reportsInRange = dataWithPetroleum.filter(
   (d) => rangeStart <= d.datetime && d.datetime < rangeEnd,
 );
 
-const petroleumCount = reportsInRange.filter(
-  (d) => d.petroleumRelated,
-).length;
+const petroleumCount = reportsInRange.filter((d) => d.petroleumRelated).length;
 
 const otherCount = reportsInRange.length - petroleumCount;
 const totalReports = reportsInRange.length;
@@ -43,46 +41,47 @@ const reportCategoryCounts = [
   },
 ];
 
-display(
-  html`
-    <div style="margin-bottom: 8px; font-size: 14px;">
-      <strong>Selected range:</strong>
-      ${formatMapDateRange(startEnd)}
-      <span style="color: #888;"> · ${d3.format(",")(totalReports)} reports</span>
-    </div>
-    ${Plot.plot({
-      height: 350,
-      y: {
-        grid: true,
-        label: "Number of reports",
-        inset: 10,
-        domain: [0, Math.max(1, d3.max(reportCategoryCounts, (d) => d.count) * 1.12)],
-      },
-      x: {
-        label: null,
-        domain: ["Petroleum-related", "Other"],
-      },
-      color: {
-        domain: ["Petroleum-related", "Other"],
-        range: ["#d97706", "#888888"],
-      },
-      marks: [
-        Plot.barY(reportCategoryCounts, {
-          x: "category",
-          y: "count",
-          fill: "category",
-        }),
-        Plot.text(reportCategoryCounts, {
-          x: "category",
-          y: "count",
-          text: "label",
-          dy: -10,
-          fontWeight: "bold",
-        }),
+display(html`
+  <div style="margin-bottom: 8px; font-size: 14px;">
+    <strong>Selected range:</strong>
+    ${formatMapDateRange(startEnd)}
+    <span style="color: #888;"> · ${d3.format(",")(totalReports)} reports</span>
+  </div>
+  ${Plot.plot({
+    height: 350,
+    y: {
+      grid: true,
+      label: "Number of reports",
+      inset: 10,
+      domain: [
+        0,
+        Math.max(1, d3.max(reportCategoryCounts, (d) => d.count) * 1.12),
       ],
-    })}
-  `,
-);
+    },
+    x: {
+      label: null,
+      domain: ["Petroleum-related", "Other"],
+    },
+    color: {
+      domain: ["Petroleum-related", "Other"],
+      range: ["#d97706", "#888888"],
+    },
+    marks: [
+      Plot.barY(reportCategoryCounts, {
+        x: "category",
+        y: "count",
+        fill: "category",
+      }),
+      Plot.text(reportCategoryCounts, {
+        x: "category",
+        y: "count",
+        text: "label",
+        dy: -10,
+        fontWeight: "bold",
+      }),
+    ],
+  })}
+`);
 ```
 
 ```js
@@ -118,7 +117,10 @@ display(
 
         const brush = d3
           .brushX()
-          .extent([[x1, y1], [x2, y2]])
+          .extent([
+            [x1, y1],
+            [x2, y2],
+          ])
           .on("brush end", (event) => {
             if (!event.sourceEvent || !event.selection) return;
 
@@ -138,7 +140,7 @@ display(
 );
 ```
 
-As of August 2026, the majority of Smell MyCity reports in the Portland, Maine area contain at least one petroleum-related keyword which includes: ***oil, petrol, petro, tar, petroleum, gasoline, fuel, diesel, asphalt, oily, petrochemical, crude, asphalty***
+As of August 2026, the majority of Smell MyCity reports in the Portland, Maine area contain at least one petroleum-related keyword which includes: **_oil, petrol, petro, tar, petroleum, gasoline, fuel, diesel, asphalt, oily, petrochemical, crude, asphalty_**
 
 Petroleum-related language appears in 56% of the submitted reports.
 
@@ -191,9 +193,7 @@ const reportType = view(
 
 ```js
 const filteredReports = dataWithPetroleum.filter((d) => {
-  const inDateRange =
-    startEnd[0] <= d.datetime &&
-    d.datetime < startEnd[1];
+  const inDateRange = startEnd[0] <= d.datetime && d.datetime < startEnd[1];
 
   const matchesType =
     reportType === "All reports" ||
@@ -210,18 +210,19 @@ function basemapUrl(z, x, y) {
   return `https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/${z}/${y}/${x}`;
 }
 
+// function basemapUrl(z, x, y) {
+//   return `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+// }
+
 function renderBasemap(
   projection,
   width,
   height,
   zoomTransform = d3.zoomIdentity,
 ) {
-  const effectiveScale =
-    projection.scale() * 2 * Math.PI * zoomTransform.k;
+  const effectiveScale = projection.scale() * 2 * Math.PI * zoomTransform.k;
 
-  const effectiveTranslate = zoomTransform.apply(
-    projection([0, 0]),
-  );
+  const effectiveTranslate = zoomTransform.apply(projection([0, 0]));
 
   const tiles = tile()
     .extent([
@@ -234,9 +235,7 @@ function renderBasemap(
   const [tx, ty] = tiles.translate;
   const k = tiles.scale;
 
-  const clipId = `basemap-${Math.random()
-    .toString(36)
-    .slice(2)}`;
+  const clipId = `basemap-${Math.random().toString(36).slice(2)}`;
 
   const g = d3
     .create("svg:g")
@@ -264,6 +263,47 @@ function renderBasemap(
 function basemap(projection, width, height) {
   return () => renderBasemap(projection, width, height);
 }
+```
+
+```js
+const terminals = [
+  {
+    name: "CITGO South Portland Terminal",
+    address: "102 Mechanic St, South Portland, ME 04106",
+    longitude: -70.2393,
+    latitude: 43.6425,
+  },
+  {
+    name: "South Portland Terminal LLC",
+    address: "170 Lincoln St, South Portland, ME 04106",
+    longitude: -70.2856,
+    latitude: 43.6356,
+  },
+  {
+    name: "Portland Pipe Line Corporation",
+    address: "30 Hill St, South Portland, ME 04106",
+    longitude: -70.2641,
+    latitude: 43.6277,
+  },
+  {
+    name: "Global Partners Terminal",
+    address: "1 Clarks Rd, South Portland, ME 04106",
+    longitude: -70.2801,
+    latitude: 43.6331,
+  },
+  {
+    name: "Sprague Energy Corp.",
+    address: "59 Main St, South Portland, ME 04106",
+    longitude: -70.2442,
+    latitude: 43.6443,
+  },
+  {
+    name: "Sunoco / Gulf Oil Terminal",
+    address: "175 Front St, South Portland, ME 04106",
+    longitude: -70.2319,
+    latitude: 43.6508,
+  },
+];
 ```
 
 ```js
@@ -300,22 +340,26 @@ display(
       marks: [
         basemap(projection, width, height),
 
+        // Odor reports
         Plot.dot(filteredReports, {
           x: "longitude",
           y: "latitude",
-
           r: 4,
-
-          fill: (d) =>
-            d.petroleumRelated
-              ? "#d97706"
-              : "#888888",
-
+          fill: (d) => (d.petroleumRelated ? "#d97706" : "#888888"),
           stroke: "white",
           strokeWidth: 0.75,
-
-          // Used to identify the dots for click events
           className: "report-dot",
+        }),
+
+        // Petroleum terminals
+        Plot.dot(terminals, {
+          x: "longitude",
+          y: "latitude",
+          r: 8,
+          fill: "#facc15",
+          stroke: "white",
+          strokeWidth: 2,
+          className: "terminal-dot",
         }),
       ],
     });
@@ -326,11 +370,9 @@ display(
 
     const svg = d3.select(plot);
 
-    const mapGroups = svg
-      .selectAll(":scope > g")
-      .filter(function () {
-        return !d3.select(this).classed("basemap-layer");
-      });
+    const mapGroups = svg.selectAll(":scope > g").filter(function () {
+      return !d3.select(this).classed("basemap-layer");
+    });
 
     const zoom = d3
       .zoom()
@@ -365,7 +407,7 @@ display(
 
     svg.call(zoom);
     svg.call(zoom.scaleBy, 2);
-    
+
     // -------------------------
     // Zoom controls
     // -------------------------
@@ -410,10 +452,7 @@ display(
     const zoomOut = createZoomButton("−", "Zoom out");
 
     zoomIn.addEventListener("click", () => {
-      svg
-        .transition()
-        .duration(250)
-        .call(zoom.scaleBy, 1.5);
+      svg.transition().duration(250).call(zoom.scaleBy, 1.5);
     });
 
     zoomOut.addEventListener("click", () => {
@@ -445,9 +484,9 @@ display(
     legend.style.zIndex = "10";
 
     legend.innerHTML = `
-      <strong>Report Type</strong>
+      <strong>Map legend</strong>
 
-      <div style="margin-top:6px;">
+      <div style="margin-top:8px;">
         <span style="
           display:inline-block;
           width:10px;
@@ -456,10 +495,10 @@ display(
           background:#d97706;
           margin-right:6px;
         "></span>
-        Petroleum-related
+        Petroleum-related report
       </div>
 
-      <div>
+      <div style="margin-top:5px;">
         <span style="
           display:inline-block;
           width:10px;
@@ -468,7 +507,20 @@ display(
           background:#888888;
           margin-right:6px;
         "></span>
-        Other
+        Other odor report
+      </div>
+
+      <div style="margin-top:5px;">
+        <span style="
+          display:inline-block;
+          width:10px;
+          height:10px;
+          border-radius:50%;
+          background:#facc15;
+          margin-right:6px;
+          vertical-align:middle;
+        "></span>
+        Petroleum terminal
       </div>
     `;
 
@@ -529,6 +581,67 @@ display(
       return d3.timeFormat("%a %b %d")(date);
     };
 
+    // Click terminal markers
+    svg.selectAll(".terminal-dot").each(function (d, i) {
+      const terminal = terminals[i];
+
+      if (!terminal) return;
+
+      d3.select(this)
+        .style("cursor", "pointer")
+        .on("click", function (event) {
+          event.stopPropagation();
+
+          popup.innerHTML = `
+            <button
+              style="
+                position:absolute;
+                top:4px;
+                right:7px;
+                border:none;
+                background:none;
+                color:black;
+                font-size:20px;
+                cursor:pointer;
+              "
+              aria-label="Close"
+            >×</button>
+
+            <div style="
+              font-size:15px;
+              font-weight:600;
+              margin-bottom:10px;
+              padding-right:20px;
+            ">
+              ${terminal.name}
+            </div>
+
+            <div>
+              <strong>Address:</strong><br>
+              ${terminal.address}
+            </div>
+
+            <div style="margin-top:8px;">
+              <strong>Coordinates:</strong><br>
+              ${terminal.latitude.toFixed(4)},
+              ${terminal.longitude.toFixed(4)}
+            </div>
+          `;
+
+          popup.querySelector("button").addEventListener("click", () => {
+            popup.style.display = "none";
+          });
+
+          const [x, y] = d3.pointer(event, plot);
+
+          popup.style.left = `${Math.max(10, Math.min(x + 12, width - 300))}px`;
+
+          popup.style.top = `${Math.max(10, Math.min(y - 20, height - 160))}px`;
+
+          popup.style.display = "block";
+        });
+    });
+
     // -------------------------
     // Click report dots
     // -------------------------
@@ -540,29 +653,22 @@ display(
 
       const circle = d3.select(this);
 
-      circle
-        .style("cursor", "pointer")
-        .on("click", function (event) {
-          event.stopPropagation();
+      circle.style("cursor", "pointer").on("click", function (event) {
+        event.stopPropagation();
 
-          const type = report.petroleumRelated
-            ? "Petroleum-related odor report"
-            : "Other odor report";
+        const type = report.petroleumRelated
+          ? "Petroleum-related odor report"
+          : "Other odor report";
 
-          const date = formatDate(
-            report.day ?? report.datetime
-          );
+        const date = formatDate(report.day ?? report.datetime);
 
-          const wind = report.compass || "Not available";
+        const wind = report.compass || "Not available";
 
-          const description =
-            report.description ||
-            "No description provided.";
+        const description = report.description || "No description provided.";
 
-          const comments =
-            report.comments || "";
+        const comments = report.comments || "";
 
-          popup.innerHTML = `
+        popup.innerHTML = `
             <button
               style="
                 position:absolute;
@@ -615,28 +721,20 @@ display(
             }
           `;
 
-          // Reconnect close button after rebuilding popup HTML
-          popup
-            .querySelector("button")
-            .addEventListener("click", () => {
-              popup.style.display = "none";
-            });
-
-          // Position popup near clicked point
-          const [x, y] = d3.pointer(event, plot);
-
-          popup.style.left = `${Math.min(
-            x + 12,
-            width - 300
-          )}px`;
-
-          popup.style.top = `${Math.max(
-            y - 20,
-            10
-          )}px`;
-
-          popup.style.display = "block";
+        // Reconnect close button after rebuilding popup HTML
+        popup.querySelector("button").addEventListener("click", () => {
+          popup.style.display = "none";
         });
+
+        // Position popup near clicked point
+        const [x, y] = d3.pointer(event, plot);
+
+        popup.style.left = `${Math.min(x + 12, width - 300)}px`;
+
+        popup.style.top = `${Math.max(y - 20, 10)}px`;
+
+        popup.style.display = "block";
+      });
     });
 
     // Clicking the map background closes popup
@@ -648,6 +746,21 @@ display(
     // Map container
     // -------------------------
 
+    const attribution = document.createElement("div");
+
+    attribution.style.position = "absolute";
+    attribution.style.bottom = "0";
+    attribution.style.right = "0";
+    attribution.style.padding = "4px 7px";
+    attribution.style.background = "rgba(255,255,255,0.9)";
+    attribution.style.font = "11px sans-serif";
+    attribution.style.zIndex = "10";
+
+    attribution.innerHTML =
+      '<a href="https://www.openstreetmap.org/copyright" ' +
+      'target="_blank" rel="noopener noreferrer">' +
+      "© OpenStreetMap contributors</a>";
+
     const container = document.createElement("div");
 
     container.style.position = "relative";
@@ -657,12 +770,14 @@ display(
     container.appendChild(controls);
     container.appendChild(legend);
     container.appendChild(popup);
+    container.appendChild(attribution);
 
     return container;
   }),
 );
 ```
-*(Click a point to see what was reported at that location)*
+
+_(Click a point to see what was reported at that location)_
 
 ```js
 display(html`
@@ -678,10 +793,7 @@ function formatMapDateRange([start, end]) {
   const format = d3.timeFormat("%b %Y");
 
   // The end date is exclusive, so show the previous month.
-  const lastIncludedMonth = d3.timeMonth.offset(
-    d3.timeMonth.floor(end),
-    -1
-  );
+  const lastIncludedMonth = d3.timeMonth.offset(d3.timeMonth.floor(end), -1);
 
   return `${format(start)} – ${format(lastIncludedMonth)}`;
 }
@@ -691,25 +803,22 @@ function formatMapDateRange([start, end]) {
 const mapTimelineCounts = d3.rollup(
   dataWithPetroleum,
   (rows) => rows.length,
-  (d) => +d3.timeMonth.floor(d.datetime)
+  (d) => +d3.timeMonth.floor(d.datetime),
 );
 
 const mapTimelineFirstMonth = d3.timeMonth.floor(
-  d3.min(dataWithPetroleum, (d) => d.datetime)
+  d3.min(dataWithPetroleum, (d) => d.datetime),
 );
 
 const mapTimelineLastMonth = d3.timeMonth.floor(
-  d3.max(dataWithPetroleum, (d) => d.datetime)
+  d3.max(dataWithPetroleum, (d) => d.datetime),
 );
 
 const mapTimeline = d3.timeMonth
-  .range(
-    mapTimelineFirstMonth,
-    d3.timeMonth.offset(mapTimelineLastMonth, 1)
-  )
+  .range(mapTimelineFirstMonth, d3.timeMonth.offset(mapTimelineLastMonth, 1))
   .map((month) => ({
     month,
-    count: mapTimelineCounts.get(+month) ?? 0
+    count: mapTimelineCounts.get(+month) ?? 0,
   }));
 
 // -------------------------
@@ -718,7 +827,7 @@ const mapTimeline = d3.timeMonth
 
 const defaultStartEnd = [
   mapTimelineFirstMonth,
-  d3.timeMonth.offset(mapTimelineFirstMonth, 12)
+  d3.timeMonth.offset(mapTimelineFirstMonth, 12),
 ];
 
 const startEnd = Mutable(defaultStartEnd);
@@ -740,11 +849,11 @@ display(
     y: {
       grid: true,
       label: "Number of reports",
-      zero: true
+      zero: true,
     },
 
     x: {
-      label: "Drag the selection to choose a date range"
+      label: "Drag the selection to choose a date range",
     },
 
     marks: [
@@ -752,13 +861,13 @@ display(
         x: "month",
         y: "count",
         fill: "#d97706",
-        fillOpacity: 0.18
+        fillOpacity: 0.18,
       }),
 
       Plot.lineY(mapTimeline, {
         x: "month",
         y: "count",
-        stroke: "#d97706"
+        stroke: "#d97706",
       }),
 
       (index, scales, channels, dimensions, context) => {
@@ -770,28 +879,26 @@ display(
         const brushed = (event) => {
           if (!event.sourceEvent || !event.selection) return;
 
-          setStartEnd(
-            event.selection.map(scales.x.invert)
-          );
+          setStartEnd(event.selection.map(scales.x.invert));
         };
 
         const brush = d3
           .brushX()
-          .extent([[x1, y1], [x2, y2]])
+          .extent([
+            [x1, y1],
+            [x2, y2],
+          ])
           .on("brush end", brushed);
 
         const g = d3.create("svg:g").call(brush);
 
         // Initialize the selection at the beginning of the timeline
-        g.call(
-          brush.move,
-          defaultStartEnd.map(scales.x)
-        );
+        g.call(brush.move, defaultStartEnd.map(scales.x));
 
         return g.node();
-      }
-    ]
-  })
+      },
+    ],
+  }),
 );
 ```
 

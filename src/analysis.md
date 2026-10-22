@@ -51,37 +51,31 @@ const petroleumKeywordCounts = petroleumKeywords
   .map((keyword) => ({
     term: keyword,
     count: dataWithPetroleum.reduce((total, d) => {
-      const inRange =
-        startEnd[0] <= d.datetime &&
-        d.datetime < startEnd[1];
+      const inRange = startEnd[0] <= d.datetime && d.datetime < startEnd[1];
 
       if (!inRange) return total;
 
-      const text =
-        `${d.description ?? ""} ${d.comments ?? ""}`
-          .toLowerCase();
+      const text = `${d.description ?? ""} ${d.comments ?? ""}`.toLowerCase();
 
       return total + (text.includes(keyword) ? 1 : 0);
     }, 0),
   }))
   .sort((a, b) => b.count - a.count);
 
-  display(html`
+display(html`
   <h2>Most Common Petroleum-Related Keywords</h2>
-  <p>
-    Reports from ${formatDateRange(startEnd)}
-  </p>
+  <p>Reports from ${formatDateRange(startEnd)}</p>
   ${Plot.plot({
     height: 500,
     marginLeft: 110,
     x: {
       grid: true,
       label: "Number of reports mentioning keyword",
-      zero: true
+      zero: true,
     },
     y: {
       label: null,
-      domain: petroleumKeywordCounts.map((d) => d.term)
+      domain: petroleumKeywordCounts.map((d) => d.term),
     },
     marks: [
       Plot.barX(petroleumKeywordCounts, {
@@ -93,12 +87,12 @@ const petroleumKeywordCounts = petroleumKeywords
           format: { x: false, y: false },
           channels: {
             Keyword: "term",
-            Reports: "count"
-          }
-        }
+            Reports: "count",
+          },
+        },
       }),
-      Plot.ruleX([0])
-    ]
+      Plot.ruleX([0]),
+    ],
   })}
 `);
 ```
@@ -107,40 +101,40 @@ const petroleumKeywordCounts = petroleumKeywords
 const monthlyPetroleumCounts = d3.rollup(
   dataWithPetroleum.filter((d) => d.petroleumRelated),
   (rows) => rows.length,
-  (d) => +d3.timeMonth.floor(d.datetime)
+  (d) => +d3.timeMonth.floor(d.datetime),
 );
 
 const firstMonth1 = d3.timeMonth.floor(
-  d3.min(dataWithPetroleum, (d) => d.datetime)
+  d3.min(dataWithPetroleum, (d) => d.datetime),
 );
 
 const lastMonth1 = d3.timeMonth.floor(
-  d3.max(dataWithPetroleum, (d) => d.datetime)
+  d3.max(dataWithPetroleum, (d) => d.datetime),
 );
 
 const petroleumTimeline = d3.timeMonth
   .range(firstMonth1, d3.timeMonth.offset(lastMonth1, 1))
   .map((month) => ({
     month,
-    count: monthlyPetroleumCounts.get(+month) ?? 0
+    count: monthlyPetroleumCounts.get(+month) ?? 0,
   }));
 
-  display(
+display(
   Plot.plot({
     height: 180,
     y: {
       grid: true,
       label: "Petroleum-related reports",
-      zero: true
+      zero: true,
     },
     x: {
-      label: "Select a date range →"
+      label: "Select a date range →",
     },
     marks: [
       Plot.lineY(petroleumTimeline, {
         x: "month",
         y: "count",
-        stroke: "#d97706"
+        stroke: "#d97706",
       }),
 
       (index, scales, channels, dimensions, context) => {
@@ -162,7 +156,10 @@ const petroleumTimeline = d3.timeMonth
 
         const brush = d3
           .brushX()
-          .extent([[x1, y1], [x2, y2]])
+          .extent([
+            [x1, y1],
+            [x2, y2],
+          ])
           .on("brush end", brushed);
 
         const g = d3.create("svg:g").call(brush);
@@ -174,9 +171,9 @@ const petroleumTimeline = d3.timeMonth
         g.call(brush.move, [start, end].map(scales.x));
 
         return g.node();
-      }
-    ]
-  })
+      },
+    ],
+  }),
 );
 ```
 
@@ -203,24 +200,22 @@ const categories = ["Petroleum-related", "Other reports"];
 
 const classifiedReports = dataWithPetroleum.map((d) => ({
   ...d,
-  category: d.petroleumRelated
-    ? "Petroleum-related"
-    : "Other reports"
+  category: d.petroleumRelated ? "Petroleum-related" : "Other reports",
 }));
 
 const monthlyCounts = d3.rollup(
   classifiedReports,
   (rows) => rows.length,
   (d) => d.category,
-  (d) => +d3.timeMonth.floor(d.datetime)
+  (d) => +d3.timeMonth.floor(d.datetime),
 );
 
 const firstMonth2 = d3.timeMonth.floor(
-  d3.min(classifiedReports, (d) => d.datetime)
+  d3.min(classifiedReports, (d) => d.datetime),
 );
 
 const lastMonth2 = d3.timeMonth.floor(
-  d3.max(classifiedReports, (d) => d.datetime)
+  d3.max(classifiedReports, (d) => d.datetime),
 );
 
 const monthlyReports = d3.timeMonth
@@ -229,16 +224,15 @@ const monthlyReports = d3.timeMonth
     categories.map((category) => ({
       month,
       category,
-      count:
-        monthlyCounts.get(category)?.get(+month) ?? 0
-    }))
+      count: monthlyCounts.get(category)?.get(+month) ?? 0,
+    })),
   );
 ```
 
 ```js
 const defaultStartEnd = [
   d3.timeMonth.offset(lastMonth2, -11),
-  d3.timeMonth.offset(lastMonth2, 1)
+  d3.timeMonth.offset(lastMonth2, 1),
 ];
 
 const startEnd = Mutable(defaultStartEnd);
@@ -257,31 +251,29 @@ display(html`
     y: {
       grid: true,
       label: "Monthly reports",
-      zero: true
+      zero: true,
     },
     x: {
-      label: "Month"
+      label: "Month",
     },
     color: {
       domain: categories,
       range: ["#d97706", "#888888"],
-      legend: true
+      legend: true,
     },
     marks: [
       Plot.lineY(
         monthlyReports.filter(
-          (d) =>
-            startEnd[0] <= d.month &&
-            d.month < startEnd[1]
+          (d) => startEnd[0] <= d.month && d.month < startEnd[1],
         ),
         {
           x: "month",
           y: "count",
           stroke: "category",
-          tip: true
-        }
-      )
-    ]
+          tip: true,
+        },
+      ),
+    ],
   })}
 `);
 ```
@@ -293,22 +285,22 @@ display(html`
     y: {
       grid: true,
       label: "Monthly reports",
-      zero: true
+      zero: true,
     },
     x: {
-      label: "Month"
+      label: "Month",
     },
     color: {
       domain: categories,
       range: ["#d97706", "#888888"],
-      legend: true
+      legend: true,
     },
     marks: [
       Plot.lineY(monthlyReports, {
         x: "month",
         y: "count",
         stroke: "category",
-        tip: true
+        tip: true,
       }),
 
       (index, scales, channels, dimensions, context) => {
@@ -324,15 +316,9 @@ display(html`
 
           if (!selection) {
             const r = 10;
-            let [px] = d3.pointer(
-              event,
-              context.ownerSVGElement
-            );
+            let [px] = d3.pointer(event, context.ownerSVGElement);
 
-            px = Math.max(
-              x1 + r,
-              Math.min(x2 - r, px)
-            );
+            px = Math.max(x1 + r, Math.min(x2 - r, px));
 
             selection = [px - r, px + r];
             g.call(brush.move, selection);
@@ -343,46 +329,22 @@ display(html`
 
         const brush = d3
           .brushX()
-          .extent([[x1, y1], [x2, y2]])
+          .extent([
+            [x1, y1],
+            [x2, y2],
+          ])
           .on("brush end", brushed);
 
         const g = d3.create("svg:g").call(brush);
 
-        g.call(
-          brush.move,
-          getStartEnd().map(scales.x)
-        );
+        g.call(brush.move, getStartEnd().map(scales.x));
 
         return g.node();
-      }
-    ]
+      },
+    ],
   })}
 `);
 ```
-
-<!-- ```js
-Plot.plot({
-  y: {
-    grid: true,
-    label: "Petroleum-related reports"
-  },
-  x: {
-    label: "Date"
-  },
-  marks: [
-    Plot.lineY(
-      dataWithPetroleum.filter(d => d.petroleumRelated),
-      Plot.binX(
-        {y: "count"},
-        {
-          x: "datetime",
-          interval: "month"
-        }
-      )
-    )
-  ]
-})
-``` -->
 
 ## Petroleum-related Reports by Wind Direction
 
@@ -401,54 +363,56 @@ Plot.plot({
     label: "Petroleum-related reports (%)",
     domain: [0, 50],
     grid: true,
-    tickFormat: d => `${d}%`
+    tickFormat: (d) => `${d}%`,
   },
   y: {
     label: "Wind direction",
-    domain: ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+    domain: ["N", "NE", "E", "SE", "S", "SW", "W", "NW"],
   },
   marks: [
-    Plot.barX(
-      petroleumByWindDirection,
-      {
-        x: "percentage",
-        y: "direction",
-        sort: {y: "-x"},
-        fill: "#d97706",
-        tip: {
-            format: {
-                x: false,
-                y: false,
-            },
-            channels: {
-                "Wind direction": "direction",
-                "Reports": "count",
-                "Share": "percentage",
-            },
+    Plot.barX(petroleumByWindDirection, {
+      x: "percentage",
+      y: "direction",
+      sort: { y: "-x" },
+      fill: "#d97706",
+      tip: {
+        format: {
+          x: false,
+          y: false,
         },
-      }
-    ),
-    Plot.ruleX([0])
-  ]
-})
+        channels: {
+          "Wind direction": "direction",
+          Reports: "count",
+          Share: "percentage",
+        },
+      },
+    }),
+    Plot.ruleX([0]),
+  ],
+});
 ```
 
 ```js
-const petroleumByWindDirection = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
-  .map((direction) => {
-    const petroleumReports = dataWithPetroleum.filter(
-      (d) => d.petroleumRelated,
-    );
+const petroleumByWindDirection = [
+  "N",
+  "NE",
+  "E",
+  "SE",
+  "S",
+  "SW",
+  "W",
+  "NW",
+].map((direction) => {
+  const petroleumReports = dataWithPetroleum.filter((d) => d.petroleumRelated);
 
-    const directionReports = petroleumReports.filter(
-      (d) => d.compass === direction,
-    );
+  const directionReports = petroleumReports.filter(
+    (d) => d.compass === direction,
+  );
 
-    return {
-      direction,
-      count: directionReports.length,
-      percentage:
-        (directionReports.length / petroleumReports.length) * 100,
-    };
-  });
+  return {
+    direction,
+    count: directionReports.length,
+    percentage: (directionReports.length / petroleumReports.length) * 100,
+  };
+});
 ```

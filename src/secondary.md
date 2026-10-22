@@ -21,9 +21,9 @@ When massive marine tankers pump fuel into or out of the waterfront facilities, 
 - **Permitted Limits:** Combined, the city's tank farms are historically permitted by the Maine Department of Environmental Protection (DEP) to emit up to **600 to 630 tons of Volatile Organic Compounds (VOCs)** and **104 tons of Hazardous Air Pollutants (HAPs)** annually.
 - **Refueling Spikes:** Local data reveals that brief, intense transfer windows (such as a 30-minute tanker offloading or tank-filling cycle) cause significant localized air spikes.
 - **Fenceline Vapor Levels:**
-	- Normal baseline background vapor level is roughly **4.5 parts per billion (ppb)**.
-	- Air quality testing near the **Citgo terminal** during operations revealed spikes up to **60 ppb**.
-	- Testing near **South Portland Terminal LLC** tracked extreme spikes up to **175 ppb**—nearly 12 times the background norm.
+  - Normal baseline background vapor level is roughly **4.5 parts per billion (ppb)**.
+  - Air quality testing near the **Citgo terminal** during operations revealed spikes up to **60 ppb**.
+  - Testing near **South Portland Terminal LLC** tracked extreme spikes up to **175 ppb**—nearly 12 times the background norm.
 - **Benzene Trailing:** Recent state-mandated fenceline monitoring data confirmed that average benzene levels near major terminals exceeded the state’s ambient air limit of 1.28 mcg/m³. The CITGO terminal boundary averaged **2.18 mcg/m³** (with spikes up to 11.8 mcg/m³), while South Portland Terminal LLC averaged **3.05 mcg/m³**.
 
 ### Regulatory Actions & Compliance
