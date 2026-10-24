@@ -1046,12 +1046,42 @@ const selectedReference = screeningReferences[selectedChemical] ?? null;
 
 function getScreeningReference(column) {
   const key = normalizeKey(chemicalLabel(column));
-  const reference = screeningReferences[key];
+  const reference = screeningReferences[key] ?? screeningReferences[column];
 
   if (!reference) return null;
 
-  return reference.unit === concentrationUnit(column) ? reference : null;
+  const referenceUnit = normalizeConcentrationUnit(reference.unit);
+  const selectedUnit = normalizeConcentrationUnit(concentrationUnit(column));
+
+  return referenceUnit === selectedUnit ? reference : null;
 }
+
+const selectedScreeningReference = getScreeningReference(selectedChemical);
+
+const mrlExceedanceCounts = Object.fromEntries(
+  ["acute", "intermediate", "chronic"].map((duration) => {
+    const threshold = selectedScreeningReference?.[duration];
+
+    if (threshold == null || !Number.isFinite(threshold)) {
+      return [duration, null];
+    }
+
+    return [
+      duration,
+      rangeRows.filter((row) => {
+        const rawValue = row[selectedChemical];
+        const value = Number(rawValue);
+
+        return (
+          rawValue != null &&
+          rawValue !== "" &&
+          Number.isFinite(value) &&
+          value >= threshold
+        );
+      }).length,
+    ];
+  }),
+);
 ```
 
 ```js
@@ -1701,10 +1731,13 @@ const chartRows = selectedRows
 
 const fullDateExtent = d3.extent(chartRows, (row) => row.date);
 
-const rangeRows = chartRows.filter(
-  (row) =>
-    !brushRange || (row.date >= brushRange[0] && row.date <= brushRange[1]),
-);
+const rangeRows = chartRows.filter((row) => {
+  if (!brushRange) return true;
+
+  const [start, end] = brushRange;
+
+  return row.date >= start && row.date <= end;
+});
 ```
 
 ```js
@@ -2075,6 +2108,49 @@ display(html`
       <div>
         <div
           style="
+    font-size: 12px;
+    color: var(--theme-foreground-muted);
+    margin-bottom: 6px;
+  "
+        >
+          MRL exceedances
+        </div>
+
+        <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+          ${[
+            { label: "Acute", key: "acute", color: "#e53935" },
+            { label: "Intermediate", key: "intermediate", color: "#f28c28" },
+            { label: "Chronic", key: "chronic", color: "#b08b00" },
+          ].map(
+            (item) => html`
+              <div>
+                <div
+                  style="
+          font-size: 11px;
+          color: var(--theme-foreground-muted);
+        "
+                >
+                  ${item.label}
+                </div>
+                <strong
+                  style="
+          color: ${item.color};
+          font-variant-numeric: tabular-nums;
+        "
+                >
+                  ${mrlExceedanceCounts[item.key] == null
+                    ? "N/A"
+                    : mrlExceedanceCounts[item.key].toLocaleString()}
+                </strong>
+              </div>
+            `,
+          )}
+        </div>
+      </div>
+
+      <div>
+        <div
+          style="
             font-size: 12px;
             color: var(--theme-foreground-muted);
         "
@@ -2387,7 +2463,6 @@ display(
 ```
 
 ```js
-// Count VOC measurements exceeding each configured screening reference.
 const vocExceedanceCounts = (() => {
   const durations = [
     { key: "acute", label: "Acute", period: "1–14 days", color: "#e53935" },
@@ -2404,27 +2479,44 @@ const vocExceedanceCounts = (() => {
 
   return durations.map((duration) => {
     let count = 0;
-    const compoundsExceeded = new Set();
+    const breakdown = [];
 
     for (const [chemical, reference] of compounds) {
       const threshold = reference[duration.key];
 
       if (!Number.isFinite(threshold)) continue;
 
+      let compoundCount = 0;
+
       for (const row of normalizedRows) {
         const value = Number(row[chemical]);
 
-        if (Number.isFinite(value) && value > threshold) {
-          count++;
-          compoundsExceeded.add(chemical);
+        if (
+          row[chemical] != null &&
+          row[chemical] !== "" &&
+          Number.isFinite(value) &&
+          value > threshold
+        ) {
+          compoundCount++;
         }
       }
+
+      if (compoundCount > 0) {
+        count += compoundCount;
+        breakdown.push({
+          chemical,
+          count: compoundCount,
+        });
+      }
     }
+
+    breakdown.sort((a, b) => b.count - a.count);
 
     return {
       ...duration,
       count,
-      compoundsExceeded: compoundsExceeded.size,
+      compoundsExceeded: breakdown.length,
+      breakdown,
     };
   });
 })();
@@ -2470,7 +2562,7 @@ display(html`
           VOC threshold exceedances
         </h2>
         <div style="font-size: 13px; color: var(--theme-foreground-muted);">
-          Across all available measurements
+          Breakdown by compound and screening duration
         </div>
       </div>
 
@@ -2500,75 +2592,139 @@ display(html`
     <div style="padding: 4px 20px;">
       ${vocExceedanceCounts.map(
         (item, index) => html`
-          <div
+          <section
             style="
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) auto;
-          align-items: center;
-          gap: 16px;
           padding: 16px 0;
           ${index < vocExceedanceCounts.length - 1
               ? "border-bottom: 1px solid var(--theme-foreground-faint);"
               : ""}
         "
           >
-            <div style="display: flex; align-items: flex-start; gap: 12px;">
-              <div
-                style="
-              width: 4px;
-              min-height: 42px;
-              align-self: stretch;
-              border-radius: 4px;
-              background: ${item.color};
-              flex-shrink: 0;
-            "
-              ></div>
-              <div>
-                <div style="font-size: 15px; font-weight: 650;">
-                  ${item.label}
+            <div
+              style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+          "
+            >
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div
+                  style="
+                width: 4px;
+                height: 38px;
+                border-radius: 4px;
+                background: ${item.color};
+              "
+                ></div>
+                <div>
+                  <div style="font-size: 15px; font-weight: 650;">
+                    ${item.label}
+                  </div>
+                  <div
+                    style="
+                  margin-top: 3px;
+                  font-size: 12px;
+                  color: var(--theme-foreground-muted);
+                "
+                  >
+                    ${item.period} · ${item.compoundsExceeded} VOCs with
+                    exceedances
+                  </div>
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <div
+                  style="
+                font-size: 23px;
+                font-weight: 650;
+                color: ${item.color};
+                font-variant-numeric: tabular-nums;
+              "
+                >
+                  ${item.count.toLocaleString()}
                 </div>
                 <div
                   style="
-                margin-top: 3px;
-                font-size: 12px;
+                font-size: 11px;
                 color: var(--theme-foreground-muted);
               "
                 >
-                  ${item.period}
-                </div>
-                <div
-                  style="
-                margin-top: 7px;
-                font-size: 12px;
-                color: var(--theme-foreground-muted);
-              "
-                >
-                  ${item.compoundsExceeded} compounds with exceedances
+                  measurements
                 </div>
               </div>
             </div>
 
-            <div style="text-align: right;">
-              <div
-                style="
-              font-size: 23px;
-              font-weight: 650;
-              font-variant-numeric: tabular-nums;
-              color: ${item.color};
-            "
-              >
-                ${item.count.toLocaleString()}
-              </div>
-              <div
-                style="
-              font-size: 11px;
-              color: var(--theme-foreground-muted);
-            "
-              >
-                measurements
-              </div>
-            </div>
-          </div>
+            ${item.breakdown.length
+              ? html`
+                  <div
+                    style="
+                border: 1px solid var(--theme-foreground-faint);
+                border-radius: 8px;
+                overflow: hidden;
+              "
+                  >
+                    <div
+                      style="
+                  display: grid;
+                  grid-template-columns: minmax(0, 1fr) auto;
+                  gap: 12px;
+                  padding: 9px 12px;
+                  font-size: 11px;
+                  font-weight: 700;
+                  color: var(--theme-foreground-muted);
+                  background: var(--theme-foreground-faintest, transparent);
+                "
+                    >
+                      <span>VOC compound</span>
+                      <span style="text-align: right;">Exceedances</span>
+                    </div>
+                    ${item.breakdown.map(
+                      (compound, i) => html`
+                        <div
+                          style="
+                    display: grid;
+                    grid-template-columns: minmax(0, 1fr) auto;
+                    gap: 12px;
+                    align-items: center;
+                    padding: 10px 12px;
+                    font-size: 13px;
+                    ${i < item.breakdown.length - 1
+                            ? "border-bottom: 1px solid var(--theme-foreground-faint);"
+                            : ""}
+                  "
+                        >
+                          <span style="overflow-wrap: anywhere;">
+                            ${compound.chemical}
+                          </span>
+                          <strong
+                            style="
+                      font-variant-numeric: tabular-nums;
+                      color: ${item.color};
+                    "
+                            >${compound.count.toLocaleString()}</strong
+                          >
+                        </div>
+                      `,
+                    )}
+                  </div>
+                `
+              : html`
+                  <div
+                    style="
+                padding: 12px;
+                border-radius: 8px;
+                background: var(--theme-foreground-faintest, transparent);
+                color: var(--theme-foreground-muted);
+                font-size: 13px;
+              "
+                  >
+                    No measurements exceeded configured references in this
+                    category.
+                  </div>
+                `}
+          </section>
         `,
       )}
     </div>
@@ -2585,15 +2741,16 @@ display(html`
     >
       <strong style="color: var(--theme-foreground);">How to read this</strong>
       <p style="margin: 5px 0 0;">
-        Counts represent individual compound measurements above configured
-        screening references, not people affected, health cases, or confirmed
-        harmful exposures. One sample may contribute multiple exceedances. Only
-        compounds with configured thresholds are included.
+        Each compound count represents the number of recorded measurements above
+        that compound's configured screening reference. Compounds are ranked
+        from most to fewest exceedances within each category. These counts do
+        not represent unique samples, people affected, health cases, or
+        confirmed harmful exposures.
       </p>
       <p style="margin: 6px 0 0;">
-        *The total sums exceedances across all three duration categories, so the
-        same measurement may be counted more than once if it exceeds multiple
-        thresholds. Comparisons require compatible units.
+        *The total sums compound-level exceedances across all three duration
+        categories. A measurement can contribute to multiple categories if it
+        exceeds multiple references. Comparisons require compatible units.
       </p>
     </footer>
   </section>
