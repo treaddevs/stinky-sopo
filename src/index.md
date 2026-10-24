@@ -13,7 +13,10 @@ community-level signal that fixed air monitors cannot capture on their own.
 ```js
 const fullRange = [
   d3.min(mapTimeline, (d) => d.month),
-  d3.utcMonth.offset(d3.max(mapTimeline, (d) => d.month), 1),
+  d3.utcMonth.offset(
+    d3.max(mapTimeline, (d) => d.month),
+    1,
+  ),
 ];
 
 const [rangeStart, rangeEnd] = startEnd ?? fullRange;
@@ -22,9 +25,7 @@ const reportsInRange = dataWithPetroleum.filter(
   (d) => rangeStart <= d.datetime && d.datetime < rangeEnd,
 );
 
-const petroleumCount = reportsInRange.filter(
-  (d) => d.petroleumRelated,
-).length;
+const petroleumCount = reportsInRange.filter((d) => d.petroleumRelated).length;
 
 const otherCount = reportsInRange.length - petroleumCount;
 const totalReports = reportsInRange.length;
@@ -599,65 +600,59 @@ display(
       return d3.timeFormat("%a %b %d")(date);
     };
 
-    // Click terminal markers
-    svg.selectAll(".terminal-dot").each(function (d, i) {
-      const terminal = terminals[i];
+    // -------------------------
+    // Click petroleum terminals
+    // -------------------------
 
-      if (!terminal) return;
+    const terminalMarks = svg.selectAll(".terminal-dot");
 
-      d3.select(this)
-        .style("cursor", "pointer")
-        .on("click", function (event) {
-          event.stopPropagation();
+    terminalMarks.each(function () {
+      const mark = d3.select(this);
 
-          popup.innerHTML = `
-            <button
-              style="
-                position:absolute;
-                top:4px;
-                right:7px;
-                border:none;
-                background:none;
-                color:black;
-                font-size:20px;
-                cursor:pointer;
-              "
-              aria-label="Close"
-            >×</button>
+      // Get the actual circles belonging to this mark.
+      mark.selectAll("circle").each(function (_, i) {
+        const terminal = terminals[i];
+        if (!terminal) return;
 
-            <div style="
-              font-size:15px;
-              font-weight:600;
-              margin-bottom:10px;
-              padding-right:20px;
-            ">
-              ${terminal.name}
-            </div>
+        d3.select(this)
+          .style("cursor", "pointer")
+          .on("click.terminal", function (event) {
+            event.stopPropagation();
 
-            <div>
-              <strong>Address:</strong><br>
-              ${terminal.address}
-            </div>
+            popup.innerHTML = `
+              <button
+                style="position:absolute;top:4px;right:7px;border:none;
+                  background:none;color:black;font-size:20px;cursor:pointer;"
+                aria-label="Close"
+              >×</button>
 
-            <div style="margin-top:8px;">
-              <strong>Coordinates:</strong><br>
-              ${terminal.latitude.toFixed(4)},
-              ${terminal.longitude.toFixed(4)}
-            </div>
-          `;
+              <div style="font-size:15px;font-weight:600;
+                margin-bottom:10px;padding-right:20px;">
+                ${terminal.name}
+              </div>
 
-          popup.querySelector("button").addEventListener("click", () => {
-            popup.style.display = "none";
+              <div>
+                <strong>Address:</strong><br>
+                ${terminal.address}
+              </div>
+
+              <div style="margin-top:8px;">
+                <strong>Coordinates:</strong><br>
+                ${terminal.latitude.toFixed(4)}, ${terminal.longitude.toFixed(4)}
+              </div>
+            `;
+
+            popup.querySelector("button").addEventListener("click", (e) => {
+              e.stopPropagation();
+              popup.style.display = "none";
+            });
+
+            const [x, y] = d3.pointer(event, plot);
+            popup.style.left = `${Math.max(10, Math.min(x + 12, width - 300))}px`;
+            popup.style.top = `${Math.max(10, Math.min(y - 20, height - 160))}px`;
+            popup.style.display = "block";
           });
-
-          const [x, y] = d3.pointer(event, plot);
-
-          popup.style.left = `${Math.max(10, Math.min(x + 12, width - 300))}px`;
-
-          popup.style.top = `${Math.max(10, Math.min(y - 20, height - 160))}px`;
-
-          popup.style.display = "block";
-        });
+      });
     });
 
     // -------------------------
@@ -850,7 +845,10 @@ const defaultStartEnd = [
 
 const startEnd = Mutable([
   d3.min(mapTimeline, (d) => d.month),
-  d3.utcMonth.offset(d3.max(mapTimeline, (d) => d.month), 1),
+  d3.utcMonth.offset(
+    d3.max(mapTimeline, (d) => d.month),
+    1,
+  ),
 ]);
 
 const setStartEnd = (range) => {
