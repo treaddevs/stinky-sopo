@@ -2,7 +2,7 @@
 toc: false
 ---
 
-# Portland Harbor VOC monitoring
+# Portland Harbor VOC Monitoring
 
 Explore volatile organic compound (VOC) measurements from monitoring stations around Portland Harbor. Select a compound and station to inspect recorded concentrations, available wind observations, and changes over time.
 
@@ -455,253 +455,590 @@ display(html`
 ```js
 const mrlSource = "https://wwwn.cdc.gov/TSP/MRLS/mrlslisting.aspx";
 
-// MRL values in ppbv unless otherwise specified.
-// null = no value configured for that exposure duration.
+// MRL values in ppbv.
+// Acute: 1–14 days; intermediate: 15–364 days;
+// chronic: 1 year or longer.
+// null = no applicable value configured.
+// Aggregate categories are not individual chemical MRLs.
 const screeningReferences = {
-  Acrolein: {
-    acute: 3,
-    intermediate: 0.4,
-    chronic: 0.4,
+  // Aliphatics
+  "Aliphatics+Aromatics": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
     unit: "ppbv",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — acrolein",
-    description:
-      "ATSDR health-based screening references for non-cancer effects.",
+    status: "Not applicable",
+    title: "Combined aliphatics and aromatics",
+    description: "Aggregate category; no individual-compound MRL.",
+    source: mrlSource,
+  },
+  "Aliphatics sum total": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Not applicable",
+    title: "Aliphatics sum total",
+    description: "Aggregate category; no individual-compound MRL.",
+    source: mrlSource,
+  },
+  "1-Pentene": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — 1-pentene",
+    description: "Applicable inhalation MRLs not verified.",
+    source: mrlSource,
+  },
+  "2,3-Dimethylbutane": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — 2,3-dimethylbutane",
+    description: "Applicable inhalation MRLs not verified.",
+    source: mrlSource,
+  },
+  "2,3-Dimethylpentane": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — 2,3-dimethylpentane",
+    description: "Applicable inhalation MRLs not verified.",
+    source: mrlSource,
+  },
+  Isopentane: {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — isopentane",
+    description: "Applicable inhalation MRLs not verified.",
+    source: mrlSource,
+  },
+  "n-Butane": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — n-butane",
+    description: "Applicable inhalation MRLs not verified.",
+    source: mrlSource,
+  },
+  "n-Pentane": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — n-pentane",
+    description: "Applicable inhalation MRLs not verified.",
+    source: mrlSource,
+  },
+  Propane: {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — propane",
+    description: "Applicable inhalation MRLs not verified.",
+    source: mrlSource,
+  },
+  Propylene: {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — propylene",
+    description: "Applicable inhalation MRLs not verified.",
     source: mrlSource,
   },
 
+  // Aromatics
+  "Aromatics sum total": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Not applicable",
+    title: "Aromatics sum total",
+    description: "Aggregate category; no individual-compound MRL.",
+    source: mrlSource,
+  },
+  "1,2,4-Trimethylbenzene": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — 1,2,4-trimethylbenzene",
+    description: "Applicable inhalation MRLs not verified.",
+    source: mrlSource,
+  },
+  "1,3,5-Trimethylbenzene": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — 1,3,5-trimethylbenzene",
+    description: "Applicable inhalation MRLs not verified.",
+    source: mrlSource,
+  },
   Benzene: {
     acute: 9,
     intermediate: 7,
     chronic: 2,
     unit: "ppbv",
     status: "Draft",
-    title: "ATSDR inhalation Minimal Risk Levels — benzene",
+    title: "ATSDR inhalation MRL — benzene",
     description:
-      "Draft ATSDR inhalation screening references for non-cancer effects.",
+      "Draft inhalation MRLs; non-cancer health-based screening references.",
     source: mrlSource,
   },
-
   Ethylbenzene: {
     acute: 5000,
     intermediate: 2000,
     chronic: 60,
     unit: "ppbv",
     status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — ethylbenzene",
-    description:
-      "ATSDR health-based screening references for non-cancer effects.",
+    title: "ATSDR inhalation MRL — ethylbenzene",
+    description: "Health-based inhalation screening references.",
     source: mrlSource,
   },
-
-  Toluene: {
-    acute: 2000,
-    intermediate: null,
-    chronic: 1000,
-    unit: "ppbv",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — toluene",
-    description:
-      "No intermediate-duration value is configured in this dataset.",
-    source: mrlSource,
-  },
-
-  "Methylene Chloride": {
-    acute: 600,
-    intermediate: 300,
-    chronic: 300,
-    unit: "ppbv",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — methylene chloride",
-    description:
-      "ATSDR health-based screening references for non-cancer effects.",
-    source: mrlSource,
-  },
-
-  Tetrachloroethylene: {
-    acute: 6,
-    intermediate: 6,
-    chronic: 6,
-    unit: "ppbv",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — tetrachloroethylene",
-    description: "Also known as perchloroethylene or PCE.",
-    source: mrlSource,
-  },
-
-  "1,4-Dichlorobenzene": {
-    acute: 2000,
-    intermediate: 200,
-    chronic: 10,
-    unit: "ppbv",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — 1,4-dichlorobenzene",
-    description:
-      "ATSDR health-based screening references for non-cancer effects.",
-    source: mrlSource,
-  },
-
-  "Carbon Tetrachloride": {
-    acute: null,
-    intermediate: 30,
-    chronic: 30,
-    unit: "ppbv",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — carbon tetrachloride",
-    description: "No acute-duration value is configured in this dataset.",
-    source: mrlSource,
-  },
-
-  Chloroform: {
-    acute: 1,
-    intermediate: 0.8,
-    chronic: 0.4,
-    unit: "ppbv",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — chloroform",
-    description:
-      "ATSDR health-based screening references for non-cancer effects.",
-    source: mrlSource,
-  },
-
-  "1,1,1-Trichloroethane": {
-    acute: 1000,
-    intermediate: 700,
-    chronic: null,
-    unit: "ppbv",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — 1,1,1-trichloroethane",
-    description: "No chronic-duration value is configured in this dataset.",
-    source: mrlSource,
-  },
-
-  "1,1,2-Trichloroethane": {
-    acute: 30,
-    intermediate: 2,
-    chronic: null,
-    unit: "ppbv",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — 1,1,2-trichloroethane",
-    description: "No chronic-duration value is configured in this dataset.",
-    source: mrlSource,
-  },
-
-  "1,1-Dichloroethene": {
-    acute: null,
-    intermediate: 1,
-    chronic: 1,
-    unit: "ppbv",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — 1,1-dichloroethene",
-    description: "No acute-duration value is configured in this dataset.",
-    source: mrlSource,
-  },
-
-  "Ethylene Dichloride": {
-    acute: 100,
-    intermediate: 100,
-    chronic: null,
-    unit: "ppbv",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — ethylene dichloride",
-    description:
-      "Also known as 1,2-dichloroethane. No chronic-duration value is configured in this dataset.",
-    source: mrlSource,
-  },
-
-  "Trans-1,2-Dichloroethene": {
-    acute: 3000,
-    intermediate: null,
-    chronic: null,
-    unit: "ppbv",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — trans-1,2-dichloroethene",
-    description:
-      "No intermediate- or chronic-duration values are configured in this dataset.",
-    source: mrlSource,
-  },
-
-  Trichloroethylene: {
-    acute: null,
-    intermediate: 0.4,
-    chronic: 0.4,
-    unit: "ppbv",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — trichloroethylene",
-    description:
-      "Also known as TCE. No acute-duration value is configured in this dataset.",
-    source: mrlSource,
-  },
-
-  "Vinyl Chloride": {
-    acute: 500,
-    intermediate: 20,
-    chronic: null,
-    unit: "ppbv",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — vinyl chloride",
-    description: "No chronic-duration value is configured in this dataset.",
-    source: mrlSource,
-  },
-
-  "Methyl Chloride": {
-    acute: 500,
-    intermediate: 300,
-    chronic: 30,
-    unit: "ppbv",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — methyl chloride",
-    description: "Also known as chloromethane.",
-    source: mrlSource,
-  },
-
-  "Ethyl Chloride": {
-    acute: 13000,
-    intermediate: 13000,
-    chronic: null,
-    unit: "ppbv",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — ethyl chloride",
-    description:
-      "Also known as chloroethane. No chronic-duration value is configured in this dataset.",
-    source: mrlSource,
-  },
-
-  "Methyl Bromide": {
-    acute: null,
-    intermediate: 20,
-    chronic: 1,
-    unit: "ppbv",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — methyl bromide",
-    description:
-      "Also known as bromomethane. No acute-duration value is configured in this dataset.",
-    source: mrlSource,
-  },
-
-  Naphthalene: {
-    acute: 0.06,
-    intermediate: null,
-    chronic: null,
-    unit: "ppb",
-    status: "Final",
-    title: "ATSDR inhalation Minimal Risk Levels — naphthalene",
-    description:
-      "The configured acute value uses ppb as supplied. Confirm the unit matches the measurement data before comparing.",
-    source: mrlSource,
-  },
-
   "m,p-Xylenes": {
     acute: 2000,
     intermediate: 400,
     chronic: 10,
     unit: "ppbv",
     status: "Draft",
-    title: "ATSDR inhalation Minimal Risk Levels — mixed xylenes",
+    title: "ATSDR inhalation MRL — mixed xylenes",
     description:
-      "The ATSDR reference is for mixed xylenes, not an isomer-specific MRL. Confirm applicability to this measurement column before interpreting comparisons.",
+      "Mixed-xylene references; not isomer-specific. Confirm applicability.",
     source: mrlSource,
-    note: "ATSDR reference is for mixed xylenes, not an isomer-specific MRL.",
+    note: "ATSDR values are for mixed xylenes.",
+  },
+  Naphthalene: {
+    acute: 0.06,
+    intermediate: null,
+    chronic: null,
+    unit: "ppb",
+    status: "Final",
+    title: "ATSDR inhalation MRL — naphthalene",
+    description:
+      "Retained from the existing configuration; verify units and duration against the current source before comparison.",
+    source: mrlSource,
+  },
+  "o-Xylene": {
+    acute: 2000,
+    intermediate: 400,
+    chronic: 10,
+    unit: "ppbv",
+    status: "Draft",
+    title: "ATSDR inhalation MRL — mixed xylenes",
+    description:
+      "Mixed-xylene references, not an o-xylene-specific MRL. Confirm applicability.",
+    source: mrlSource,
+    note: "ATSDR values are for mixed xylenes.",
+  },
+  Toluene: {
+    acute: 2000,
+    intermediate: null,
+    chronic: 1000,
+    unit: "ppbv",
+    status: "Final",
+    title: "ATSDR inhalation MRL — toluene",
+    description: "Intermediate-duration value is not configured.",
+    source: mrlSource,
+  },
+
+  // Chlorinated solvents
+  "Chlorinated Solvents sum total": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Not applicable",
+    title: "Chlorinated solvents sum total",
+    description: "Aggregate category; no individual-compound MRL.",
+    source: mrlSource,
+  },
+  "1,1,1-Trichloroethane": {
+    acute: 1000,
+    intermediate: 700,
+    chronic: null,
+    unit: "ppbv",
+    status: "Final",
+    title: "ATSDR inhalation MRL — 1,1,1-trichloroethane",
+    description: "Chronic-duration value is not configured.",
+    source: mrlSource,
+  },
+  "1,1,2,2-Tetrachloroethane": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — 1,1,2,2-tetrachloroethane",
+    description: "Applicable inhalation MRLs not verified.",
+    source: mrlSource,
+  },
+  "1,1,2-Trichloroethane": {
+    acute: 30,
+    intermediate: 2,
+    chronic: null,
+    unit: "ppbv",
+    status: "Final",
+    title: "ATSDR inhalation MRL — 1,1,2-trichloroethane",
+    description: "No chronic-duration value configured.",
+    source: mrlSource,
+  },
+  "1,1-Dichloroethene": {
+    acute: null,
+    intermediate: 1,
+    chronic: 1,
+    unit: "ppbv",
+    status: "Final",
+    title: "ATSDR inhalation MRL — 1,1-dichloroethene",
+    description: "No acute-duration value configured.",
+    source: mrlSource,
+  },
+  "1,2-Dichlorobenzene": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — 1,2-dichlorobenzene",
+    description:
+      "Existing oral MRLs should not be used as inhalation thresholds.",
+    source: mrlSource,
+  },
+  "1,3-Dichlorobenzene": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — 1,3-dichlorobenzene",
+    description: "Applicable inhalation MRLs not verified.",
+    source: mrlSource,
+  },
+  "1,4-Dichlorobenzene": {
+    acute: 2000,
+    intermediate: 200,
+    chronic: 10,
+    unit: "ppbv",
+    status: "Final",
+    title: "ATSDR inhalation MRL — 1,4-dichlorobenzene",
+    description:
+      "Verify route-specific values against the current ATSDR listing.",
+    source: mrlSource,
+  },
+  "Carbon Tetrachloride": {
+    acute: null,
+    intermediate: 30,
+    chronic: 30,
+    unit: "ppbv",
+    status: "Final",
+    title: "ATSDR inhalation MRL — carbon tetrachloride",
+    description: "No acute-duration inhalation MRL configured.",
+    source: mrlSource,
+  },
+  Chlorobenzene: {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — chlorobenzene",
+    description: "Do not substitute oral MRLs for inhalation references.",
+    source: mrlSource,
+  },
+  Chloroform: {
+    acute: 1,
+    intermediate: 0.8,
+    chronic: 0.4,
+    unit: "ppbv",
+    status: "Final",
+    title: "ATSDR inhalation MRL — chloroform",
+    description: "Health-based inhalation screening references.",
+    source: mrlSource,
+  },
+  "cis-1,2-Dichloroethene": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — cis-1,2-dichloroethene",
+    description: "Applicable inhalation MRLs not verified.",
+    source: mrlSource,
+  },
+  "cis-1,3-Dichloropropene": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — cis-1,3-dichloropropene",
+    description: "Applicable inhalation MRLs not verified.",
+    source: mrlSource,
+  },
+  "Ethylene Dichloride": {
+    acute: 100,
+    intermediate: 100,
+    chronic: null,
+    unit: "ppbv",
+    status: "Final",
+    title: "ATSDR inhalation MRL — 1,2-dichloroethane",
+    description:
+      "Also known as ethylene dichloride. No chronic value configured.",
+    source: mrlSource,
+  },
+  "Ethylidene Dichloride": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — 1,1-dichloroethane",
+    description:
+      "Also known as ethylidene dichloride. Applicable inhalation MRLs not verified.",
+    source: mrlSource,
+  },
+  "Methylene Chloride": {
+    acute: 600,
+    intermediate: 300,
+    chronic: 300,
+    unit: "ppbv",
+    status: "Final",
+    title: "ATSDR inhalation MRL — methylene chloride",
+    description: "Also known as dichloromethane.",
+    source: mrlSource,
+  },
+  Tetrachloroethylene: {
+    acute: 6,
+    intermediate: 6,
+    chronic: 6,
+    unit: "ppbv",
+    status: "Final",
+    title: "ATSDR inhalation MRL — tetrachloroethylene",
+    description: "Also known as perchloroethylene or PCE.",
+    source: mrlSource,
+  },
+  "trans-1,2-Dichloroethene": {
+    acute: 3000,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Final",
+    title: "ATSDR inhalation MRL — trans-1,2-dichloroethene",
+    description: "No intermediate or chronic value configured.",
+    source: mrlSource,
+  },
+  Trichloroethylene: {
+    acute: null,
+    intermediate: 0.4,
+    chronic: 0.4,
+    unit: "ppbv",
+    status: "Final",
+    title: "ATSDR inhalation MRL — trichloroethylene",
+    description: "Also known as TCE. No acute-duration value configured.",
+    source: mrlSource,
+  },
+  "Vinyl Chloride": {
+    acute: 500,
+    intermediate: 20,
+    chronic: null,
+    unit: "ppbv",
+    status: "Final",
+    title: "ATSDR inhalation MRL — vinyl chloride",
+    description: "No chronic inhalation value configured.",
+    source: mrlSource,
+  },
+
+  // Combustion
+  "Combustion sum total": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Not applicable",
+    title: "Combustion sum total",
+    description: "Aggregate category; no individual-compound MRL.",
+    source: mrlSource,
+  },
+  "1,3-Butadiene": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — 1,3-butadiene",
+    description: "Applicable inhalation MRLs not verified.",
+    source: mrlSource,
+  },
+  Acrolein: {
+    acute: 3,
+    intermediate: 0.4,
+    chronic: 0.4,
+    unit: "ppbv",
+    status: "Final",
+    title: "ATSDR inhalation MRL — acrolein",
+    description: "Health-based inhalation screening references.",
+    source: mrlSource,
+  },
+
+  // Coolants and refrigerants
+  "Coolants sum total": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Not applicable",
+    title: "Coolants sum total",
+    description: "Aggregate category; no individual-compound MRL.",
+    source: mrlSource,
+  },
+  Dichlorodifluoromethane: {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — dichlorodifluoromethane",
+    description:
+      "Also known as CFC-12 or Freon 12. Applicable MRLs not verified.",
+    source: mrlSource,
+  },
+  "Ethyl Chloride": {
+    acute: 13000,
+    intermediate: 13000,
+    chronic: null,
+    unit: "ppbv",
+    status: "Final",
+    title: "ATSDR inhalation MRL — ethyl chloride",
+    description: "Also known as chloroethane. No chronic value configured.",
+    source: mrlSource,
+  },
+  "Freon 113": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — Freon 113",
+    description:
+      "Also known as 1,1,2-trichloro-1,2,2-trifluoroethane. Applicable MRLs not verified.",
+    source: mrlSource,
+  },
+  "Freon 114": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — Freon 114",
+    description:
+      "Also known as dichlorotetrafluoroethane. Applicable MRLs not verified.",
+    source: mrlSource,
+  },
+  "Methyl Chloride": {
+    acute: 500,
+    intermediate: 300,
+    chronic: 30,
+    unit: "ppbv",
+    status: "Final",
+    title: "ATSDR inhalation MRL — methyl chloride",
+    description: "Also known as chloromethane.",
+    source: mrlSource,
+  },
+  Trichlorofluoromethane: {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — trichlorofluoromethane",
+    description:
+      "Also known as CFC-11 or Freon 11. Applicable MRLs not verified.",
+    source: mrlSource,
+  },
+
+  // Fumigants
+  "Fumigants sum total": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Not applicable",
+    title: "Fumigants sum total",
+    description: "Aggregate category; no individual-compound MRL.",
+    source: mrlSource,
+  },
+  "Ethylene Dibromide": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — ethylene dibromide",
+    description:
+      "Also known as 1,2-dibromoethane. Applicable inhalation MRLs not verified.",
+    source: mrlSource,
+  },
+  "Methyl Bromide": {
+    acute: null,
+    intermediate: 20,
+    chronic: 1,
+    unit: "ppbv",
+    status: "Final",
+    title: "ATSDR inhalation MRL — methyl bromide",
+    description: "Also known as bromomethane. No acute value configured.",
+    source: mrlSource,
+  },
+
+  // Solvents
+  "Solvents sum total": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Not applicable",
+    title: "Solvents sum total",
+    description: "Aggregate category; no individual-compound MRL.",
+    source: mrlSource,
+  },
+  "Methyl Ethyl Ketone": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — methyl ethyl ketone",
+    description:
+      "Also known as 2-butanone. Applicable inhalation MRLs not verified.",
+    source: mrlSource,
+  },
+  "Methyl Isobutyl Ketone": {
+    acute: null,
+    intermediate: null,
+    chronic: null,
+    unit: "ppbv",
+    status: "Unverified",
+    title: "ATSDR inhalation MRL — methyl isobutyl ketone",
+    description: "Also known as MIBK. Applicable inhalation MRLs not verified.",
+    source: mrlSource,
   },
 };
 
@@ -944,6 +1281,78 @@ const mapContainer = html`
       height: 100%;
     "
     ></div>
+    <div
+      class="map-legend"
+      style="
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    z-index: 2;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    font-family: system-ui, sans-serif;
+    font-size: 12px;
+    color: #222;
+  "
+    >
+      <div
+        style="
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 9px;
+    "
+      >
+        Map key
+      </div>
+
+      <div
+        style="
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 7px;
+    "
+      >
+        <span
+          style="
+        display: inline-block;
+        width: 11px;
+        height: 11px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: #315d78;
+        border: 2px solid #fff;
+        outline: 1px solid #315d78;
+      "
+        ></span>
+        Monitoring station
+      </div>
+
+      <div
+        style="
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    "
+      >
+        <span
+          style="
+        display: inline-block;
+        width: 11px;
+        height: 11px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: #f2c94c;
+        border: 2px solid #fff;
+        outline: 1px solid #d1aa24;
+      "
+        ></span>
+        Petroleum terminal
+      </div>
+    </div>
   </div>
 `;
 
@@ -1038,16 +1447,16 @@ display(mapContainer);
     });
 
     map.on("click", "station-circles", (event) => {
-    const feature = event.features?.[0];
-    if (!feature) return;
+      const feature = event.features?.[0];
+      if (!feature) return;
 
-    const properties = feature.properties;
-    const coordinates = feature.geometry.coordinates.slice();
+      const properties = feature.properties;
+      const coordinates = feature.geometry.coordinates.slice();
 
-    new maplibregl.Popup()
+      new maplibregl.Popup()
         .setLngLat(coordinates)
         .setHTML(
-        `
+          `
             <div style="font-family:system-ui;min-width:180px;color:#000;">
             <strong style="color:#000;">
                 ${escapeHTML(properties.station)}
@@ -1057,7 +1466,7 @@ display(mapContainer);
             </div>
             <div style="font-size:18px;font-weight:650;margin:3px 0;color:#000;">
                 ${
-                properties.concentration == null
+                  properties.concentration == null
                     ? "No reading available"
                     : `${formatNumber(Number(properties.concentration))} ${escapeHTML(concentrationUnit(selectedChemical))}`
                 }
@@ -1306,97 +1715,177 @@ display(html`
       : "Reports: Full timeline"}
   </h2>
 
-  ${Plot.plot({
-    width: 900,
-    height: 330,
-    marginLeft: 70,
-    marginBottom: 55,
-    x: {
-      type: "time",
-      label: "Sample date",
-      grid: true,
-    },
-    y: {
-      label: `${chemicalLabel(selectedChemical)} (${concentrationUnit(selectedChemical)})`,
-      zero: true,
-      grid: true,
-    },
-    marks: [
-      Plot.line(rangeRows, {
-        x: "date",
-        y: (d) => d[selectedChemical],
-        stroke: "#008fbd",
-        strokeOpacity: 0.6,
-      }),
+  ${(() => {
+    const mrlReference = screeningReferences[selectedChemical];
 
-      Plot.dot(rangeRows, {
-        x: "date",
-        y: (d) => d[selectedChemical],
-        r: 4,
-        fill: (d) => getMrlAssessment(d[selectedChemical]).color,
-        stroke: "white",
-        strokeWidth: 0.7,
-        tip: true,
-        title: (d) => {
-          const value = Number(d[selectedChemical]);
-          const assessment = getMrlAssessment(value);
+    const normalizeUnit = (unit) => {
+      const normalized = unit?.trim().toLowerCase();
+      return normalized === "ppb" || normalized === "ppbv"
+        ? "ppbv"
+        : normalized;
+    };
 
-          return `${formatNumber(value)} ${concentrationUnit(selectedChemical)}
-        Sample date: ${formatDate(d.date)}
-        ${assessment.label}`;
-        },
-      }),
+    // Get thresholds that have valid values and compatible units.
+    const availableThresholds = [
+      {
+        duration: "Acute",
+        value: mrlReference?.acute,
+        color: "#e53935",
+      },
+      {
+        duration: "Intermediate",
+        value: mrlReference?.intermediate,
+        color: "#f28c28",
+      },
+      {
+        duration: "Chronic",
+        value: mrlReference?.chronic,
+        color: "#d4a900",
+      },
+    ].filter(
+      (d) =>
+        d.value != null &&
+        Number.isFinite(d.value) &&
+        normalizeUnit(mrlReference?.unit) ===
+          normalizeUnit(concentrationUnit(selectedChemical)),
+    );
 
-      // Larger invisible targets make the points easier to click.
-      (index, scales) => {
-        const g = d3.create("svg:g");
+    // Find the highest valid measurement in the displayed date range.
+    const dataValues = rangeRows
+      .map((d) => Number(d[selectedChemical]))
+      .filter(Number.isFinite);
 
-        g.selectAll("circle")
-          .data(rangeRows)
-          .join("circle")
-          .attr("cx", (d) => scales.x(d.date))
-          .attr("cy", (d) => scales.y(d[selectedChemical]))
-          .attr("r", 10)
-          .attr("fill", "transparent")
-          .style("cursor", "pointer")
-          .append("title")
-          .text(
-            (d) =>
-              `${formatNumber(d[selectedChemical])} ${concentrationUnit(selectedChemical)} — Sample date: ${formatDate(d.date)}`,
-          );
+    const maxDataValue = dataValues.length ? Math.max(...dataValues) : null;
 
-        g.selectAll("circle").on("click", (event, d) => {
-          selectedReportInput.value = d;
-          selectedReportInput.dispatchEvent(new Event("input"));
-        });
+    // If any reading exceeds a threshold, show all available thresholds.
+    const hasExceededThreshold =
+      maxDataValue != null &&
+      availableThresholds.some((threshold) => maxDataValue > threshold.value);
 
-        return g.node();
+    // Otherwise, show only the threshold closest to the maximum reading.
+    const mrlThresholds = hasExceededThreshold
+      ? availableThresholds
+      : maxDataValue != null && availableThresholds.length
+        ? [
+            availableThresholds.reduce((closest, current) =>
+              Math.abs(current.value - maxDataValue) <
+              Math.abs(closest.value - maxDataValue)
+                ? current
+                : closest,
+            ),
+          ]
+        : [];
+
+    return Plot.plot({
+      width: 900,
+      height: 330,
+      marginLeft: 70,
+      marginBottom: 55,
+
+      x: {
+        type: "time",
+        label: "Sample date",
+        grid: true,
       },
 
-      Plot.ruleY([0], {
-        stroke: "#888",
-        strokeOpacity: 0.4,
-      }),
-    ],
-  })}
+      y: {
+        label: `${chemicalLabel(selectedChemical)} (${concentrationUnit(selectedChemical)})`,
+        zero: true,
+        grid: true,
+      },
+
+      marks: [
+        // Dotted MRL reference lines.
+        ...mrlThresholds.map((threshold) =>
+          Plot.ruleY([threshold.value], {
+            stroke: threshold.color,
+            strokeWidth: 1.5,
+            strokeDasharray: "4,4",
+            strokeOpacity: 0.9,
+          }),
+        ),
+
+        // Concentration trend.
+        Plot.line(rangeRows, {
+          x: "date",
+          y: (d) => d[selectedChemical],
+          stroke: "#008fbd",
+          strokeOpacity: 0.6,
+        }),
+
+        // Measurements colored by their MRL assessment.
+        Plot.dot(rangeRows, {
+          x: "date",
+          y: (d) => d[selectedChemical],
+          r: 4,
+          fill: (d) => getMrlAssessment(d[selectedChemical]).color,
+          stroke: "white",
+          strokeWidth: 0.7,
+          tip: true,
+
+          title: (d) => {
+            const value = Number(d[selectedChemical]);
+            const assessment = getMrlAssessment(value);
+
+            return `${formatNumber(value)} ${concentrationUnit(selectedChemical)}
+            Sample date: ${formatDate(d.date)}
+            ${assessment.label}`;
+          },
+        }),
+
+        // Larger invisible targets make the points easier to click.
+        (index, scales) => {
+          const g = d3.create("svg:g");
+
+          g.selectAll("circle")
+            .data(rangeRows)
+            .join("circle")
+            .attr("cx", (d) => scales.x(d.date))
+            .attr("cy", (d) => scales.y(d[selectedChemical]))
+            .attr("r", 10)
+            .attr("fill", "transparent")
+            .style("cursor", "pointer")
+            .append("title")
+            .text(
+              (d) =>
+                `${formatNumber(d[selectedChemical])} ${concentrationUnit(selectedChemical)} — Sample date: ${formatDate(d.date)}`,
+            );
+
+          g.selectAll("circle").on("click", (event, d) => {
+            selectedReportInput.value = d;
+            selectedReportInput.dispatchEvent(new Event("input"));
+          });
+
+          return g.node();
+        },
+
+        // Zero baseline.
+        Plot.ruleY([0], {
+          stroke: "#888",
+          strokeOpacity: 0.4,
+        }),
+      ],
+    });
+  })()}
   ${selectedReport
     ? html`
         <div
           style="
-        margin: 12px 0 20px;
-        padding: 16px;
-        border: 1px solid #008fbd;
-        border-radius: 8px;
-        background: var(--theme-background);
-        max-width: 420px;
-      "
+              margin: 12px 0 20px;
+              padding: 16px;
+              border: 1px solid #008fbd;
+              border-radius: 8px;
+              background: var(--theme-background);
+              max-width: 420px;
+            "
         >
           <div
             style="
-          font-size: 20px;
-          font-weight: 700;
-          color: ${getMrlAssessment(selectedReport[selectedChemical]).color};
-        "
+                font-size: 20px;
+                font-weight: 700;
+                color: ${getMrlAssessment(selectedReport[selectedChemical])
+              .color};
+              "
           >
             ${formatNumber(selectedReport[selectedChemical])}
             ${concentrationUnit(selectedChemical)}
@@ -1404,10 +1893,11 @@ display(html`
 
           <div
             style="
-          margin-top: 5px;
-          font-size: 13px;
-          color: ${getMrlAssessment(selectedReport[selectedChemical]).color};
-        "
+                margin-top: 5px;
+                font-size: 13px;
+                color: ${getMrlAssessment(selectedReport[selectedChemical])
+              .color};
+              "
           >
             ${getMrlAssessment(selectedReport[selectedChemical]).label}
           </div>
@@ -1420,6 +1910,51 @@ display(html`
           <div style="margin-top: 4px;">
             <strong>Station:</strong>
             ${selectedStation}
+          </div>
+
+          <div style="margin-top: 8px;">
+            <table
+              style="
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 13px;
+                text-align: left;
+                "
+            >
+              <thead>
+                <tr>
+                  <th style="padding: 6px 8px; border-bottom: 1px solid #888;">
+                    Compass
+                  </th>
+                  <th style="padding: 6px 8px; border-bottom: 1px solid #888;">
+                    Bearing
+                  </th>
+                  <th style="padding: 6px 8px; border-bottom: 1px solid #888;">
+                    Gust
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding: 6px 8px;">
+                    ${selectedReport.windDirection ??
+                    selectedReport.raw?.compass ??
+                    "—"}
+                  </td>
+                  <td style="padding: 6px 8px;">
+                    ${(selectedReport.windBearing ??
+                      selectedReport.raw?.bearing) != null
+                      ? `${selectedReport.windBearing ?? selectedReport.raw?.bearing}°`
+                      : "—"}
+                  </td>
+                  <td style="padding: 6px 8px;">
+                    ${selectedReport.windGust ??
+                    selectedReport.raw?.gust ??
+                    "—"}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           <button
@@ -1466,21 +2001,21 @@ function normalizeConcentrationUnit(unit) {
 
 ```js
 const minRow = chartRows.reduce(
-(min, row) =>
+  (min, row) =>
     min === null ||
     Number(row[selectedChemical]) < Number(min[selectedChemical])
-    ? row
-    : min,
-null,
+      ? row
+      : min,
+  null,
 );
 
 const maxRow = chartRows.reduce(
-(max, row) =>
+  (max, row) =>
     max === null ||
     Number(row[selectedChemical]) > Number(max[selectedChemical])
-    ? row
-    : max,
-null,
+      ? row
+      : max,
+  null,
 );
 
 const minValue = minRow ? Number(minRow[selectedChemical]) : null;
@@ -1490,7 +2025,11 @@ const mrlReference = screeningReferences[selectedChemical];
 
 const mrlThresholds = [
   { duration: "Acute", value: mrlReference?.acute, color: "#e53935" },
-  { duration: "Intermediate", value: mrlReference?.intermediate, color: "#f28c28" },
+  {
+    duration: "Intermediate",
+    value: mrlReference?.intermediate,
+    color: "#f28c28",
+  },
   { duration: "Chronic", value: mrlReference?.chronic, color: "#d4a900" },
 ].filter(
   (d) =>
@@ -1501,7 +2040,7 @@ const mrlThresholds = [
 );
 
 display(html`
-<div
+  <div
     style="
     display: flex;
     justify-content: space-between;
@@ -1510,102 +2049,101 @@ display(html`
     flex-wrap: wrap;
     margin-bottom: 12px;
     "
->
+  >
     <div>
-    <h2 style="margin: 0;">Full timeline</h2>
-    <p
+      <h2 style="margin: 0;">Full timeline</h2>
+      <p
         style="
         font-size: 13px;
         color: var(--theme-foreground-muted);
         margin: 6px 0 0;
         "
-    >
+      >
         Drag across the chart to select a date range. Clear the selection to
         restore the full range.
-    </p>
+      </p>
     </div>
 
     <div
-    style="
+      style="
         display: flex;
         gap: 24px;
         align-items: center;
         flex-wrap: wrap;
     "
     >
-    <div>
+      <div>
         <div
-        style="
+          style="
             font-size: 12px;
             color: var(--theme-foreground-muted);
         "
         >
-        Minimum
+          Minimum
         </div>
 
         <strong
-        style="
+          style="
             color: ${minValue == null
             ? "var(--theme-foreground)"
             : getMrlAssessment(minValue).color};
         "
         >
-        ${minValue == null
+          ${minValue == null
             ? "N/A"
             : `${formatNumber(minValue)} ${concentrationUnit(selectedChemical)}`}
         </strong>
 
         <div
-        style="
+          style="
             font-size: 12px;
             color: var(--theme-foreground-muted);
             margin-top: 3px;
         "
         >
-        ${minRow ? formatDate(minRow.date) : "No date"}
+          ${minRow ? formatDate(minRow.date) : "No date"}
         </div>
-    </div>
+      </div>
 
-    <div>
+      <div>
         <div
-        style="
+          style="
             font-size: 12px;
             color: var(--theme-foreground-muted);
         "
         >
-        Maximum
+          Maximum
         </div>
 
         <strong
-        style="
+          style="
             color: ${maxValue == null
             ? "var(--theme-foreground)"
             : getMrlAssessment(maxValue).color};
         "
         >
-        ${maxValue == null
+          ${maxValue == null
             ? "N/A"
             : `${formatNumber(maxValue)} ${concentrationUnit(selectedChemical)}`}
         </strong>
 
         <div
-        style="
+          style="
             font-size: 12px;
             color: var(--theme-foreground-muted);
             margin-top: 3px;
         "
         >
-        ${maxRow ? formatDate(maxRow.date) : "No date"}
+          ${maxRow ? formatDate(maxRow.date) : "No date"}
         </div>
+      </div>
     </div>
-    </div>
-</div>
+  </div>
 
-${
-    mrlThresholds.length > 0
+  ${mrlThresholds.length > 0
     ? html`
         <div
-            style="
+          style="
             display: flex;
             gap: 16px;
             flex-wrap: wrap;
@@ -1614,70 +2152,68 @@ ${
             font-size: 12px;
             "
         >
-            ${mrlThresholds.map(
+          ${mrlThresholds.map(
             (d) => html`
-                <div
+              <div
                 style="
                     display: flex;
                     align-items: center;
                     gap: 6px;
                 "
-                >
+              >
                 <span
-                    style="
+                  style="
                     width: 22px;
                     border-top: 2px dotted ${d.color};
                     display: inline-block;
                     "
                 ></span>
                 <span>${d.duration} MRL</span>
-                </div>
+              </div>
             `,
-            )}
+          )}
         </div>
-        `
-    : html``
-}
-
-${Plot.plot({
+      `
+    : html``}
+  ${Plot.plot({
     width: 900,
     height: 155,
     marginLeft: 70,
     marginBottom: 35,
     x: {
-    type: "time",
-    label: "Sample date",
+      type: "time",
+      label: "Sample date",
     },
     y: {
-    label: null,
-    axis: null,
-    grid: true,
+      label: null,
+      axis: null,
+      grid: true,
     },
     marks: [
-    ...mrlThresholds.map((threshold) =>
+      ...mrlThresholds.map((threshold) =>
         Plot.ruleY([threshold.value], {
-        stroke: threshold.color,
-        strokeWidth: 1.5,
-        strokeDasharray: "4,4",
-        strokeOpacity: 0.9,
+          stroke: threshold.color,
+          strokeWidth: 1.5,
+          strokeDasharray: "4,4",
+          strokeOpacity: 0.9,
         }),
-    ),
+      ),
 
-    Plot.line(chartRows, {
+      Plot.line(chartRows, {
         x: "date",
         y: (d) => d[selectedChemical],
         stroke: "#008fbd",
         strokeOpacity: 0.8,
-    }),
+      }),
 
-    Plot.dot(chartRows, {
+      Plot.dot(chartRows, {
         x: "date",
         y: (d) => d[selectedChemical],
         r: 1.5,
         fill: "#008fbd",
-    }),
+      }),
 
-    (index, scales, channels, dimensions) => {
+      (index, scales, channels, dimensions) => {
         const x1 = dimensions.marginLeft;
         const x2 = dimensions.width - dimensions.marginRight;
         const y1 = dimensions.marginTop;
@@ -1686,21 +2222,21 @@ ${Plot.plot({
         const g = d3.create("svg:g");
 
         const brush = d3
-        .brushX()
-        .extent([
+          .brushX()
+          .extent([
             [x1, y1],
             [x2, y2],
-        ])
-        .on("end", (event) => {
+          ])
+          .on("end", (event) => {
             if (!event.sourceEvent) return;
 
             const nextRange = event.selection
-            ? event.selection.map(scales.x.invert).sort((a, b) => a - b)
-            : null;
+              ? event.selection.map(scales.x.invert).sort((a, b) => a - b)
+              : null;
 
             brushRangeInput.value = nextRange;
             brushRangeInput.dispatchEvent(new Event("input"));
-        });
+          });
 
         g.call(brush);
 
@@ -1708,20 +2244,20 @@ ${Plot.plot({
         const initialRange = brushRange || fullDateExtent;
 
         if (initialRange?.[0] && initialRange?.[1]) {
-        g.call(brush.move, initialRange.map(scales.x));
+          g.call(brush.move, initialRange.map(scales.x));
         }
 
         return g.node();
-    },
+      },
     ],
-})}
+  })}
 `);
 ```
 
 ```js
 function formatDateRange([start, end]) {
-    const format = d3.timeFormat("%b %Y");
-    return `${format(start)} – ${format(end)}`;
+  const format = d3.timeFormat("%b %Y");
+  return `${format(start)} – ${format(end)}`;
 }
 ```
 
@@ -1850,10 +2386,224 @@ display(
 );
 ```
 
+```js
+// Count VOC measurements exceeding each configured screening reference.
+const vocExceedanceCounts = (() => {
+  const durations = [
+    { key: "acute", label: "Acute", period: "1–14 days", color: "#e53935" },
+    {
+      key: "intermediate",
+      label: "Intermediate",
+      period: "15–364 days",
+      color: "#f28c28",
+    },
+    { key: "chronic", label: "Chronic", period: "≥1 year", color: "#b08b00" },
+  ];
+
+  const compounds = Object.entries(screeningReferences);
+
+  return durations.map((duration) => {
+    let count = 0;
+    const compoundsExceeded = new Set();
+
+    for (const [chemical, reference] of compounds) {
+      const threshold = reference[duration.key];
+
+      if (!Number.isFinite(threshold)) continue;
+
+      for (const row of normalizedRows) {
+        const value = Number(row[chemical]);
+
+        if (Number.isFinite(value) && value > threshold) {
+          count++;
+          compoundsExceeded.add(chemical);
+        }
+      }
+    }
+
+    return {
+      ...duration,
+      count,
+      compoundsExceeded: compoundsExceeded.size,
+    };
+  });
+})();
+
+const totalExceedances = vocExceedanceCounts.reduce(
+  (sum, item) => sum + item.count,
+  0,
+);
+
+display(html`
+  <section
+    style="
+    margin: 20px 0;
+    border: 1px solid var(--theme-foreground-faint);
+    border-radius: 12px;
+    overflow: hidden;
+  "
+  >
+    <header
+      style="
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--theme-foreground-faint);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+    "
+    >
+      <div>
+        <div
+          style="
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: .1em;
+          text-transform: uppercase;
+          color: var(--theme-foreground-muted);
+        "
+        >
+          Screening summary
+        </div>
+        <h2 style="font-size: 19px; margin: 6px 0 4px;">
+          VOC threshold exceedances
+        </h2>
+        <div style="font-size: 13px; color: var(--theme-foreground-muted);">
+          Across all available measurements
+        </div>
+      </div>
+
+      <div style="text-align: right; min-width: 100px;">
+        <div
+          style="
+          font-size: 30px;
+          line-height: 1.1;
+          font-weight: 700;
+          font-variant-numeric: tabular-nums;
+        "
+        >
+          ${totalExceedances.toLocaleString()}
+        </div>
+        <div
+          style="
+          margin-top: 5px;
+          font-size: 11px;
+          color: var(--theme-foreground-muted);
+        "
+        >
+          Total exceedances*
+        </div>
+      </div>
+    </header>
+
+    <div style="padding: 4px 20px;">
+      ${vocExceedanceCounts.map(
+        (item, index) => html`
+          <div
+            style="
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: center;
+          gap: 16px;
+          padding: 16px 0;
+          ${index < vocExceedanceCounts.length - 1
+              ? "border-bottom: 1px solid var(--theme-foreground-faint);"
+              : ""}
+        "
+          >
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+              <div
+                style="
+              width: 4px;
+              min-height: 42px;
+              align-self: stretch;
+              border-radius: 4px;
+              background: ${item.color};
+              flex-shrink: 0;
+            "
+              ></div>
+              <div>
+                <div style="font-size: 15px; font-weight: 650;">
+                  ${item.label}
+                </div>
+                <div
+                  style="
+                margin-top: 3px;
+                font-size: 12px;
+                color: var(--theme-foreground-muted);
+              "
+                >
+                  ${item.period}
+                </div>
+                <div
+                  style="
+                margin-top: 7px;
+                font-size: 12px;
+                color: var(--theme-foreground-muted);
+              "
+                >
+                  ${item.compoundsExceeded} compounds with exceedances
+                </div>
+              </div>
+            </div>
+
+            <div style="text-align: right;">
+              <div
+                style="
+              font-size: 23px;
+              font-weight: 650;
+              font-variant-numeric: tabular-nums;
+              color: ${item.color};
+            "
+              >
+                ${item.count.toLocaleString()}
+              </div>
+              <div
+                style="
+              font-size: 11px;
+              color: var(--theme-foreground-muted);
+            "
+              >
+                measurements
+              </div>
+            </div>
+          </div>
+        `,
+      )}
+    </div>
+
+    <footer
+      style="
+      padding: 14px 20px;
+      background: var(--theme-foreground-faintest, transparent);
+      border-top: 1px solid var(--theme-foreground-faint);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--theme-foreground-muted);
+    "
+    >
+      <strong style="color: var(--theme-foreground);">How to read this</strong>
+      <p style="margin: 5px 0 0;">
+        Counts represent individual compound measurements above configured
+        screening references, not people affected, health cases, or confirmed
+        harmful exposures. One sample may contribute multiple exceedances. Only
+        compounds with configured thresholds are included.
+      </p>
+      <p style="margin: 6px 0 0;">
+        *The total sums exceedances across all three duration categories, so the
+        same measurement may be counted more than once if it exceeds multiple
+        thresholds. Comparisons require compatible units.
+      </p>
+    </footer>
+  </section>
+`);
+```
+
 ## Data sources and interpretation
 
 - **VOC measurements:** Maine DEP monitoring data. <https://www.maine.gov/dep/air/monitoring/spo-voc-monitor.html>
-- **Benzene screening reference:** ATSDR Minimal Risk Levels. <https://wwwn.cdc.gov/TSP/MRLS/mrlslisting.aspx>
+- **Minimal Risk Levels (MRLs) for Hazardous Substances:** ATSDR Agency for Toxic Sustances and Disease Registry. <https://wwwn.cdc.gov/TSP/MRLS/mrlslisting.aspx>
 - **Map basemap:** © OpenStreetMap contributors.
 
-The chart represents the observations in the supplied CSV; it does not imply continuous monitoring between sample dates. The chronic benzene MRL is intended for chronic-exposure assessment and should not be interpreted as a threshold for individual 24-hour samples. Missing readings and missing wind observations are displayed as unavailable rather than filled with estimates.
+The chart reflects observations recorded in the supplied CSV and does not imply continuous monitoring between sample dates. Minimal Risk Levels (MRLs) are intended to support exposure assessment, not to serve as thresholds for individual 24-hour samples. Missing concentration readings and wind observations are shown as unavailable rather than estimated.

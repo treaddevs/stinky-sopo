@@ -346,73 +346,94 @@ display(html`
 `);
 ```
 
-## Petroleum-related Reports by Wind Direction
+## Reports by Wind Direction
 
-To investigate how petroleum-related reports were distributed across prevailing wind directions, I calculated the percentage of petroleum-related reports associated with each wind direction.
+To investigate how odor reports were distributed across prevailing wind directions, I calculated the percentage of **petroleum-related** and **other reports** associated with each wind direction.
 
-The wind direction comes from the **`compass`** field in the dataset and represents the prevailing wind direction associated with the report. For each direction, the percentage represents the number of petroleum-related reports associated with that direction divided by the total number of petroleum-related reports with a recorded wind direction.
+The wind direction comes from the **`compass`** field in the dataset and represents the prevailing wind direction associated with the report. For each report type, the percentage represents the number of reports associated with a given wind direction divided by the total number of reports of that type with a recorded wind direction.
 
-**Percentage = reports for each wind direction ÷ total petroleum-related reports × 100**
+**Percentage = reports of each type for a given wind direction ÷ total reports of that type with a recorded wind direction × 100**
 
-This relationship can reveal patterns worth investigating further, but it does not establish that wind direction or a particular source caused the reported odors.
+Comparing these distributions can reveal patterns worth investigating further, but it does not establish that wind direction or a particular source caused the reported odors.
 
 ```js
-Plot.plot({
-  marginLeft: 50,
-  x: {
-    label: "Petroleum-related reports (%)",
-    domain: [0, 50],
-    grid: true,
-    tickFormat: (d) => `${d}%`,
-  },
-  y: {
-    label: "Wind direction",
-    domain: ["N", "NE", "E", "SE", "S", "SW", "W", "NW"],
-  },
-  marks: [
-    Plot.barX(petroleumByWindDirection, {
-      x: "percentage",
-      y: "direction",
-      sort: { y: "-x" },
-      fill: "#d97706",
-      tip: {
-        format: {
-          x: false,
-          y: false,
-        },
-        channels: {
-          "Wind direction": "direction",
-          Reports: "count",
-          Share: "percentage",
-        },
-      },
-    }),
-    Plot.ruleX([0]),
-  ],
+const windDirections = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+
+const reportsWithWind = dataWithPetroleum.filter((d) =>
+  windDirections.includes(String(d.compass ?? "").trim().toUpperCase()),
+);
+
+const totalByType = {
+  "Petroleum-related": reportsWithWind.filter((d) => d.petroleumRelated).length,
+  "Other reports": reportsWithWind.filter((d) => !d.petroleumRelated).length,
+};
+
+const reportsByWindDirection = windDirections.flatMap((direction) => {
+  const directionReports = reportsWithWind.filter(
+    (d) => String(d.compass).trim().toUpperCase() === direction,
+  );
+
+  return ["Petroleum-related", "Other reports"].map((type) => {
+    const isPetroleum = type === "Petroleum-related";
+    const count = directionReports.filter(
+      (d) => Boolean(d.petroleumRelated) === isPetroleum,
+    ).length;
+    const denominator = totalByType[type];
+
+    return {
+      direction,
+      type,
+      count,
+      percentage: denominator ? (count / denominator) * 100 : 0,
+      label: `${denominator ? ((count / denominator) * 100).toFixed(2) : "0.00"}%`,
+    };
+  });
 });
 ```
 
 ```js
-const petroleumByWindDirection = [
-  "N",
-  "NE",
-  "E",
-  "SE",
-  "S",
-  "SW",
-  "W",
-  "NW",
-].map((direction) => {
-  const petroleumReports = dataWithPetroleum.filter((d) => d.petroleumRelated);
-
-  const directionReports = petroleumReports.filter(
-    (d) => d.compass === direction,
-  );
-
-  return {
-    direction,
-    count: directionReports.length,
-    percentage: (directionReports.length / petroleumReports.length) * 100,
-  };
-});
+display(
+  Plot.plot({
+    height: 360,
+    marginBottom: 50,
+    x: {
+      label: "Wind direction",
+      domain: windDirections,
+    },
+    y: {
+      label: "Reports by type (%)",
+      domain: [0, 50],
+      grid: true,
+      tickFormat: (d) => `${d}%`,
+    },
+    color: {
+      domain: ["Petroleum-related", "Other reports"],
+      range: ["#d97706", "#888888"],
+      legend: true,
+    },
+    marks: [
+      Plot.barY(reportsByWindDirection, {
+        x: "direction",
+        y: "percentage",
+        fill: "type",
+        fx: undefined,
+        sort: null,
+        dx: (d) => (d.type === "Petroleum-related" ? -8 : 8),
+        tip: {
+          format: {
+            x: false,
+            y: false,
+          },
+          channels: {
+            "Wind direction": "direction",
+            "Report type": "type",
+            Reports: "count",
+            "Percentage": (d) => `${d.percentage.toFixed(2)}%`,
+          },
+        },
+      }),
+      Plot.ruleY([0]),
+    ],
+  }),
+);
 ```

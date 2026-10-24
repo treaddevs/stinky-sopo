@@ -11,13 +11,20 @@ community-level signal that fixed air monitors cannot capture on their own.
 ## More than half of the reports contain petroleum-related language
 
 ```js
-const [rangeStart, rangeEnd] = startEnd;
+const fullRange = [
+  d3.min(mapTimeline, (d) => d.month),
+  d3.utcMonth.offset(d3.max(mapTimeline, (d) => d.month), 1),
+];
+
+const [rangeStart, rangeEnd] = startEnd ?? fullRange;
 
 const reportsInRange = dataWithPetroleum.filter(
   (d) => rangeStart <= d.datetime && d.datetime < rangeEnd,
 );
 
-const petroleumCount = reportsInRange.filter((d) => d.petroleumRelated).length;
+const petroleumCount = reportsInRange.filter(
+  (d) => d.petroleumRelated,
+).length;
 
 const otherCount = reportsInRange.length - petroleumCount;
 const totalReports = reportsInRange.length;
@@ -27,7 +34,7 @@ const reportCategoryCounts = [
     category: "Petroleum-related",
     count: petroleumCount,
     percentage: totalReports ? petroleumCount / totalReports : 0,
-    label: `${petroleumCount} (${d3.format(".0%")(
+    label: `${d3.format(",")(petroleumCount)} (${d3.format(".0%")(
       totalReports ? petroleumCount / totalReports : 0,
     )})`,
   },
@@ -35,7 +42,7 @@ const reportCategoryCounts = [
     category: "Other",
     count: otherCount,
     percentage: totalReports ? otherCount / totalReports : 0,
-    label: `${otherCount} (${d3.format(".0%")(
+    label: `${d3.format(",")(otherCount)} (${d3.format(".0%")(
       totalReports ? otherCount / totalReports : 0,
     )})`,
   },
@@ -44,9 +51,12 @@ const reportCategoryCounts = [
 display(html`
   <div style="margin-bottom: 8px; font-size: 14px;">
     <strong>Selected range:</strong>
-    ${formatMapDateRange(startEnd)}
-    <span style="color: #888;"> · ${d3.format(",")(totalReports)} reports</span>
+    ${formatMapDateRange([rangeStart, rangeEnd])}
+    <span style="color: #888;">
+      · ${d3.format(",")(totalReports)} reports
+    </span>
   </div>
+
   ${Plot.plot({
     height: 350,
     y: {
@@ -130,8 +140,16 @@ display(
 
         const g = d3.create("svg:g").call(brush);
 
-        // Start at the earliest month in the dataset.
-        g.call(brush.move, defaultStartEnd.map(scales.x));
+        g.call(
+          brush.move,
+          [
+            d3.min(mapTimeline, (d) => d.month),
+            d3.utcMonth.offset(
+              d3.max(mapTimeline, (d) => d.month),
+              1,
+            ),
+          ].map(scales.x),
+        );
 
         return g.node();
       },
@@ -830,7 +848,10 @@ const defaultStartEnd = [
   d3.timeMonth.offset(mapTimelineFirstMonth, 12),
 ];
 
-const startEnd = Mutable(defaultStartEnd);
+const startEnd = Mutable([
+  d3.min(mapTimeline, (d) => d.month),
+  d3.utcMonth.offset(d3.max(mapTimeline, (d) => d.month), 1),
+]);
 
 const setStartEnd = (range) => {
   startEnd.value = range ?? defaultStartEnd;
